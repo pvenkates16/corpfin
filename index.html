@@ -147,13 +147,13 @@
     <div id="info-panel-npv" class="info-panel rounded-lg shadow-lg">
         <h2 class="text-xl font-bold mb-2">Net Present Value (NPV)</h2>
         <p class="text-sm">
-            $NPV = $$\sum_{t=0}^{n} \frac{C_t}{(1+r)^t}$$
+            $$NPV = \sum_{t=0}^{n} \frac{C_t}{(1+r)^t}$$
         </p>
         <p class="text-xs mt-1">
-            $C_0$: Initial Investment (outflow)<br>
-            $C_t$: Cash Flow at time t (inflow)<br>
-            $r$: Discount Rate<br>
-            $n$: Number of Periods
+            $$C_0$$: Initial Investment (outflow)<br>
+            $$C_t$$: Cash Flow at time t (inflow)<br>
+            $$r$$: Discount Rate<br>
+            $$n$$: Number of Periods
         </p>
         <p class="text-sm mt-2">
             Total NPV: <span id="npv-value" class="font-bold text-lg text-green-400">0.00</span>
@@ -186,7 +186,7 @@
     <div id="info-panel-irr" class="info-panel rounded-lg shadow-lg hidden">
         <h2 class="text-xl font-bold mb-2">Internal Rate of Return (IRR)</h2>
         <p class="text-sm">
-            IRR is the discount rate ($r$) where NPV = 0.
+            IRR is the discount rate ($$r$$) where NPV = 0.
         </p>
         <p class="text-xs mt-1">
             The curve shows NPV at different discount rates.
@@ -216,15 +216,15 @@
     <div id="info-panel-wacc" class="info-panel rounded-lg shadow-lg hidden">
         <h2 class="text-xl font-bold mb-2">Weighted Average Cost of Capital (WACC)</h2>
         <p class="text-sm">
-            $WACC = $$\frac{E}{V} K_e + \frac{D}{V} K_d (1 - T_c)$$
+            $$WACC = \frac{E}{V} K_e + \frac{D}{V} K_d (1 - T_c)$$
         </p>
         <p class="text-xs mt-1">
-            $K_e$: Cost of Equity<br>
-            $K_d$: Cost of Debt<br>
-            $E$: Market Value of Equity<br>
-            $D$: Market Value of Debt<br>
-            $V = E + D$: Total Firm Value<br>
-            $T_c$: Corporate Tax Rate
+            $$K_e$$: Cost of Equity<br>
+            $$K_d$$: Cost of Debt<br>
+            $$E$$: Market Value of Equity<br>
+            $$D$$: Market Value of Debt<br>
+            $$V = E + D$$: Total Firm Value<br>
+            $$T_c$$: Corporate Tax Rate
         </p>
         <p class="text-sm mt-2">
             Calculated WACC: <span id="wacc-value" class="font-bold text-lg text-blue-400">0.00%</span>
@@ -261,13 +261,13 @@
             $$E(R_i) = R_f + \beta_i (E(R_m) - R_f)$$
         </p>
         <p class="text-xs mt-1">
-            $E(R_i)$: Expected Return on Asset<br>
-            $R_f$: Risk-Free Rate<br>
-            $\beta_i$: Beta of Asset<br>
-            $E(R_m) - R_f$: Market Risk Premium
+            $$E(R_i)$$: Expected Return on Asset<br>
+            $$R_f$$: Risk-Free Rate<br>
+            $$\beta_i$$: Beta of Asset<br>
+            $$E(R_m) - R_f$$: Market Risk Premium
         </p>
         <p class="text-sm mt-2">
-            Expected Return (E(Ri)): <span id="eri-value" class="font-bold text-lg text-orange-400">0.00%</span>
+            Expected Return $$(E(Ri))$$: <span id="eri-value" class="font-bold text-lg text-orange-400">0.00%</span>
         </p>
     </div>
 
@@ -316,7 +316,7 @@
     <div id="info-panel-d_e" class="info-panel rounded-lg shadow-lg hidden">
         <h2 class="text-xl font-bold mb-2">Debt-to-Equity Ratio</h2>
         <p class="text-sm">
-            $D/E = $$\frac{Total\ Debt}{Total\ Shareholder's\ Equity}$$
+            $$D/E = \frac{Total\ Debt}{Total\ Shareholder's\ Equity}$$
         </p>
         <p class="text-sm mt-2">
             Calculated D/E Ratio: <span id="d_e-value" class="font-bold text-lg text-yellow-400">0.00</span>
@@ -338,14 +338,14 @@
     <div id="info-panel-fcf" class="info-panel rounded-lg shadow-lg hidden">
         <h2 class="text-xl font-bold mb-2">Free Cash Flow (FCF)</h2>
         <p class="text-sm">
-            $FCF = $$EBIT (1 - T_c) + Depreciation - Capital\ Expenditures - Change\ in\ Working\ Capital$$
+            $$FCF = EBIT (1 - T_c) + Depreciation - Capital\ Expenditures - Change\ in\ Working\ Capital$$
         </p>
         <p class="text-xs mt-1">
-            $EBIT$: Earnings Before Interest & Taxes<br>
-            $T_c$: Corporate Tax Rate<br>
-            $Depreciation$: Non-cash expense<br>
-            $Capital\ Expenditures$: Investment in assets<br>
-            $Change\ in\ Working\ Capital$: Change in current assets - current liabilities
+            $$EBIT$$: Earnings Before Interest & Taxes<br>
+            $$T_c$$: Corporate Tax Rate<br>
+            $$Depreciation$$: Non-cash expense<br>
+            $$Capital\ Expenditures$$: Investment in assets<br>
+            $$Change\ in\ Working\ Capital$$: Change in current assets - current liabilities
         </p>
         <p class="text-sm mt-2">
             Calculated FCF: <span id="fcf-value" class="font-bold text-lg text-purple-400">0.00</span>
@@ -379,12 +379,12 @@
     <div id="info-panel-dupont" class="info-panel rounded-lg shadow-lg hidden">
         <h2 class="text-xl font-bold mb-2">Dupont Analysis</h2>
         <p class="text-sm">
-            $ROE = $$Profit\ Margin \times Asset\ Turnover \times Equity\ Multiplier$$
+            $$ROE = Profit\ Margin \times Asset\ Turnover \times Equity\ Multiplier$$
         </p>
         <p class="text-xs mt-1">
-            $Profit\ Margin = \frac{Net\ Income}{Sales}$<br>
-            $Asset\ Turnover = \frac{Sales}{Total\ Assets}$<br>
-            $Equity\ Multiplier = \frac{Total\ Assets}{Shareholder's\ Equity}$
+            $4Profit\ Margin = \frac{Net\ Income}{Sales}$$<br>
+            $$Asset\ Turnover = \frac{Sales}{Total\ Assets}$$<br>
+            $$Equity\ Multiplier = \frac{Total\ Assets}{Shareholder's\ Equity}$$
         </p>
         <p class="text-sm mt-2">
             Calculated ROE: <span id="roe-value" class="font-bold text-lg text-red-400">0.00%</span>
