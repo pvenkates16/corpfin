@@ -1,0 +1,1769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Corporate Finance Visualizations</title>
+    <!-- Tailwind CSS CDN for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            overflow: hidden; /* Prevent scrollbars */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-color: #1a202c; /* Dark background */
+            color: #e2e8f0; /* Light text */
+        }
+        #tab-container {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            right: 1rem;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap; /* Allow tabs to wrap on smaller screens */
+            gap: 0.5rem; /* Space between tabs */
+            z-index: 20;
+        }
+        .tab-button {
+            background-color: rgba(0, 0, 0, 0.5);
+            color: #e2e8f0;
+            padding: 0.75rem 1.0rem; /* Slightly smaller padding for more tabs */
+            border: none;
+            border-radius: 0.5rem 0.5rem 0 0;
+            cursor: pointer;
+            font-size: 0.9rem; /* Smaller font for more tabs */
+            transition: background-color 0.3s ease;
+            margin: 0 0.15rem; /* Reduced margin */
+            white-space: nowrap; /* Prevent text wrapping inside button */
+        }
+        .tab-button.active {
+            background-color: rgba(0, 0, 0, 0.7);
+            font-weight: bold;
+        }
+        /* Specific panel styling */
+        .info-panel, .controls-panel {
+            position: absolute; /* Default positioning */
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            max-width: 400px;
+        }
+        .info-panel {
+            top: 5rem; /* Below tabs */
+            left: 1rem;
+        }
+        .controls-panel {
+            bottom: 1rem;
+            right: 1rem;
+            width: 90%;
+        }
+        input[type="range"] {
+            width: 100%;
+            -webkit-appearance: none;
+            height: 8px;
+            background: #4a5568;
+            border-radius: 5px;
+            outline: none;
+            opacity: 0.7;
+            transition: opacity .2s;
+        }
+        input[type="range"]:hover {
+            opacity: 1;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #63b3ed; /* Blue thumb */
+            cursor: pointer;
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #63b3ed;
+            cursor: pointer;
+        }
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div id="tab-container">
+        <button class="tab-button active" onclick="showTab('npv')">NPV</button>
+        <button class="tab-button" onclick="showTab('irr')">IRR</button>
+        <button class="tab-button" onclick="showTab('wacc')">WACC</button>
+        <button class="tab-button" onclick="showTab('capm')">CAPM</button>
+        <button class="tab-button" onclick="showTab('eps')">EPS</button>
+        <button class="tab-button" onclick="showTab('d_e')">Debt/Equity</button>
+        <button class="tab-button" onclick="showTab('fcf')">FCF</button>
+        <button class="tab-button" onclick="showTab('dupont')">Dupont</button>
+    </div>
+
+    <!-- NPV Content Panels -->
+    <div id="info-panel-npv" class="info-panel rounded-lg shadow-lg">
+        <h2 class="text-xl font-bold mb-2">Net Present Value (NPV)</h2>
+        <p class="text-sm">
+            $NPV = \sum_{t=0}^{n} \frac{C_t}{(1+r)^t}$
+        </p>
+        <p class="text-xs mt-1">
+            $C_0$: Initial Investment (outflow)<br>
+            $C_t$: Cash Flow at time t (inflow)<br>
+            $r$: Discount Rate<br>
+            $n$: Number of Periods
+        </p>
+        <p class="text-sm mt-2">
+            Total NPV: <span id="npv-value" class="font-bold text-lg text-green-400">0.00</span>
+        </p>
+        <p class="text-sm mt-1">
+            Project Status: <span id="project-status" class="font-bold text-lg text-gray-400">Neutral</span>
+        </p>
+    </div>
+
+    <div id="controls-panel-npv" class="controls-panel rounded-lg shadow-lg">
+        <div class="flex flex-col">
+            <label for="c0-slider-npv" class="text-sm mb-1">Initial Investment (C0): <span id="c0-value-npv" class="font-semibold">50</span></label>
+            <input type="range" id="c0-slider-npv" min="0" max="200" value="50" step="1">
+        </div>
+        <div class="flex flex-col">
+            <label for="ct-slider-npv" class="text-sm mb-1">Annual Cash Flow (Ct): <span id="ct-value-npv" class="font-semibold">20</span></label>
+            <input type="range" id="ct-slider-npv" min="0" max="100" value="20" step="1">
+        </div>
+        <div class="flex flex-col">
+            <label for="r-slider-npv" class="text-sm mb-1">Discount Rate (r): <span id="r-value-npv" class="font-semibold">10.0%</span></label>
+            <input type="range" id="r-slider-npv" min="0.01" max="0.30" value="0.10" step="0.01">
+        </div>
+        <div class="flex flex-col">
+            <label for="n-slider-npv" class="text-sm mb-1">Number of Periods (n): <span id="n-value-npv" class="font-semibold">5</span></label>
+            <input type="range" id="n-slider-npv" min="1" max="10" value="5" step="1">
+        </div>
+    </div>
+
+    <!-- IRR Content Panels (hidden initially) -->
+    <div id="info-panel-irr" class="info-panel rounded-lg shadow-lg hidden">
+        <h2 class="text-xl font-bold mb-2">Internal Rate of Return (IRR)</h2>
+        <p class="text-sm">
+            IRR is the discount rate ($r$) where NPV = 0.
+        </p>
+        <p class="text-xs mt-1">
+            The curve shows NPV at different discount rates.
+            The vertical line marks the IRR.
+        </p>
+        <p class="text-sm mt-2">
+            Calculated IRR: <span id="irr-value" class="font-bold text-lg text-purple-400">N/A</span>
+        </p>
+    </div>
+
+    <div id="controls-panel-irr" class="controls-panel rounded-lg shadow-lg hidden">
+        <div class="flex flex-col">
+            <label for="c0-slider-irr" class="text-sm mb-1">Initial Investment (C0): <span id="c0-value-irr" class="font-semibold">50</span></label>
+            <input type="range" id="c0-slider-irr" min="0" max="200" value="50" step="1">
+        </div>
+        <div class="flex flex-col">
+            <label for="ct-slider-irr" class="text-sm mb-1">Annual Cash Flow (Ct): <span id="ct-value-irr" class="font-semibold">20</span></label>
+            <input type="range" id="ct-slider-irr" min="0" max="100" value="20" step="1">
+        </div>
+        <div class="flex flex-col">
+            <label for="n-slider-irr" class="text-sm mb-1">Number of Periods (n): <span id="n-value-irr" class="font-semibold">5</span></label>
+            <input type="range" id="n-slider-irr" min="1" max="10" value="5" step="1">
+        </div>
+    </div>
+
+    <!-- WACC Content Panels (hidden initially) -->
+    <div id="info-panel-wacc" class="info-panel rounded-lg shadow-lg hidden">
+        <h2 class="text-xl font-bold mb-2">Weighted Average Cost of Capital (WACC)</h2>
+        <p class="text-sm">
+            $WACC = \frac{E}{V} K_e + \frac{D}{V} K_d (1 - T_c)$
+        </p>
+        <p class="text-xs mt-1">
+            $K_e$: Cost of Equity<br>
+            $K_d$: Cost of Debt<br>
+            $E$: Market Value of Equity<br>
+            $D$: Market Value of Debt<br>
+            $V = E + D$: Total Firm Value<br>
+            $T_c$: Corporate Tax Rate
+        </p>
+        <p class="text-sm mt-2">
+            Calculated WACC: <span id="wacc-value" class="font-bold text-lg text-blue-400">0.00%</span>
+        </p>
+    </div>
+
+    <div id="controls-panel-wacc" class="controls-panel rounded-lg shadow-lg hidden">
+        <div class="flex flex-col">
+            <label for="ke-slider-wacc" class="text-sm mb-1">Cost of Equity (Ke): <span id="ke-value-wacc" class="font-semibold">12.0%</span></label>
+            <input type="range" id="ke-slider-wacc" min="0.01" max="0.30" value="0.12" step="0.01">
+        </div>
+        <div class="flex flex-col">
+            <label for="kd-slider-wacc" class="text-sm mb-1">Cost of Debt (Kd): <span id="kd-value-wacc" class="font-semibold">6.0%</span></label>
+            <input type="range" id="kd-slider-wacc" min="0.01" max="0.20" value="0.06" step="0.01">
+        </div>
+        <div class="flex flex-col">
+            <label for="e-slider-wacc" class="text-sm mb-1">Market Value of Equity (E): <span id="e-value-wacc" class="font-semibold">100</span></label>
+            <input type="range" id="e-slider-wacc" min="10" max="500" value="100" step="10">
+        </div>
+        <div class="flex flex-col">
+            <label for="d-slider-wacc" class="text-sm mb-1">Market Value of Debt (D): <span id="d-value-wacc" class="font-semibold">50</span></label>
+            <input type="range" id="d-slider-wacc" min="10" max="500" value="50" step="10">
+        </div>
+        <div class="flex flex-col">
+            <label for="tc-slider-wacc" class="text-sm mb-1">Corporate Tax Rate (Tc): <span id="tc-value-wacc" class="font-semibold">25.0%</span></label>
+            <input type="range" id="tc-slider-wacc" min="0.0" max="0.50" value="0.25" step="0.01">
+        </div>
+    </div>
+
+    <!-- CAPM Content Panels (hidden initially) -->
+    <div id="info-panel-capm" class="info-panel rounded-lg shadow-lg hidden">
+        <h2 class="text-xl font-bold mb-2">Capital Asset Pricing Model (CAPM)</h2>
+        <p class="text-sm">
+            $E(R_i) = R_f + \beta_i (E(R_m) - R_f)$
+        </p>
+        <p class="text-xs mt-1">
+            $E(R_i)$: Expected Return on Asset<br>
+            $R_f$: Risk-Free Rate<br>
+            $\beta_i$: Beta of Asset<br>
+            $E(R_m) - R_f$: Market Risk Premium
+        </p>
+        <p class="text-sm mt-2">
+            Expected Return (E(Ri)): <span id="eri-value" class="font-bold text-lg text-orange-400">0.00%</span>
+        </p>
+    </div>
+
+    <div id="controls-panel-capm" class="controls-panel rounded-lg shadow-lg hidden">
+        <div class="flex flex-col">
+            <label for="rf-slider-capm" class="text-sm mb-1">Risk-Free Rate (Rf): <span id="rf-value-capm" class="font-semibold">4.0%</span></label>
+            <input type="range" id="rf-slider-capm" min="0.01" max="0.10" value="0.04" step="0.005">
+        </div>
+        <div class="flex flex-col">
+            <label for="beta-slider-capm" class="text-sm mb-1">Beta (β): <span id="beta-value-capm" class="font-semibold">1.00</span></label>
+            <input type="range" id="beta-slider-capm" min="0.5" max="2.0" value="1.0" step="0.05">
+        </div>
+        <div class="flex flex-col">
+            <label for="mrp-slider-capm" class="text-sm mb-1">Market Risk Premium (MRP): <span id="mrp-value-capm" class="font-semibold">6.0%</span></label>
+            <input type="range" id="mrp-slider-capm" min="0.03" max="0.10" value="0.06" step="0.005">
+        </div>
+    </div>
+
+    <!-- EPS Content Panels (hidden initially) -->
+    <div id="info-panel-eps" class="info-panel rounded-lg shadow-lg hidden">
+        <h2 class="text-xl font-bold mb-2">Earnings Per Share (EPS)</h2>
+        <p class="text-sm">
+            $EPS = \frac{Net\ Income - Preferred\ Dividends}{Weighted\ Average\ Shares\ Outstanding}$
+        </p>
+        <p class="text-sm mt-2">
+            Calculated EPS: <span id="eps-value" class="font-bold text-lg text-green-400">0.00</span>
+        </p>
+    </div>
+
+    <div id="controls-panel-eps" class="controls-panel rounded-lg shadow-lg hidden">
+        <div class="flex flex-col">
+            <label for="net-income-slider-eps" class="text-sm mb-1">Net Income: <span id="net-income-value-eps" class="font-semibold">100</span></label>
+            <input type="range" id="net-income-slider-eps" min="0" max="500" value="100" step="10">
+        </div>
+        <div class="flex flex-col">
+            <label for="pref-div-slider-eps" class="text-sm mb-1">Preferred Dividends: <span id="pref-div-value-eps" class="font-semibold">10</span></label>
+            <input type="range" id="pref-div-slider-eps" min="0" max="100" value="10" step="5">
+        </div>
+        <div class="flex flex-col">
+            <label for="shares-slider-eps" class="text-sm mb-1">Shares Outstanding: <span id="shares-value-eps" class="font-semibold">100</span></label>
+            <input type="range" id="shares-slider-eps" min="10" max="500" value="100" step="10">
+        </div>
+    </div>
+
+    <!-- Debt-to-Equity Content Panels (hidden initially) -->
+    <div id="info-panel-d_e" class="info-panel rounded-lg shadow-lg hidden">
+        <h2 class="text-xl font-bold mb-2">Debt-to-Equity Ratio</h2>
+        <p class="text-sm">
+            $D/E = \frac{Total\ Debt}{Total\ Shareholder's\ Equity}$
+        </p>
+        <p class="text-sm mt-2">
+            Calculated D/E Ratio: <span id="d_e-value" class="font-bold text-lg text-yellow-400">0.00</span>
+        </p>
+    </div>
+
+    <div id="controls-panel-d_e" class="controls-panel rounded-lg shadow-lg hidden">
+        <div class="flex flex-col">
+            <label for="total-debt-slider-d_e" class="text-sm mb-1">Total Debt: <span id="total-debt-value-d_e" class="font-semibold">100</span></label>
+            <input type="range" id="total-debt-slider-d_e" min="0" max="500" value="100" step="10">
+        </div>
+        <div class="flex flex-col">
+            <label for="equity-slider-d_e" class="text-sm mb-1">Shareholder's Equity: <span id="equity-value-d_e" class="font-semibold">200</span></label>
+            <input type="range" id="equity-slider-d_e" min="10" max="500" value="200" step="10">
+        </div>
+    </div>
+
+    <!-- FCF Content Panels (hidden initially) -->
+    <div id="info-panel-fcf" class="info-panel rounded-lg shadow-lg hidden">
+        <h2 class="text-xl font-bold mb-2">Free Cash Flow (FCF)</h2>
+        <p class="text-sm">
+            $FCF = EBIT (1 - T_c) + Depreciation - Capital\ Expenditures - Change\ in\ Working\ Capital$
+        </p>
+        <p class="text-xs mt-1">
+            $EBIT$: Earnings Before Interest & Taxes<br>
+            $T_c$: Corporate Tax Rate<br>
+            $Depreciation$: Non-cash expense<br>
+            $Capital\ Expenditures$: Investment in assets<br>
+            $Change\ in\ Working\ Capital$: Change in current assets - current liabilities
+        </p>
+        <p class="text-sm mt-2">
+            Calculated FCF: <span id="fcf-value" class="font-bold text-lg text-purple-400">0.00</span>
+        </p>
+    </div>
+
+    <div id="controls-panel-fcf" class="controls-panel rounded-lg shadow-lg hidden">
+        <div class="flex flex-col">
+            <label for="ebit-slider-fcf" class="text-sm mb-1">EBIT: <span id="ebit-value-fcf" class="font-semibold">150</span></label>
+            <input type="range" id="ebit-slider-fcf" min="0" max="500" value="150" step="10">
+        </div>
+        <div class="flex flex-col">
+            <label for="tc-slider-fcf" class="text-sm mb-1">Corporate Tax Rate (Tc): <span id="tc-value-fcf" class="font-semibold">25.0%</span></label>
+            <input type="range" id="tc-slider-fcf" min="0.0" max="0.50" value="0.25" step="0.01">
+        </div>
+        <div class="flex flex-col">
+            <label for="depreciation-slider-fcf" class="text-sm mb-1">Depreciation: <span id="depreciation-value-fcf" class="font-semibold">30</span></label>
+            <input type="range" id="depreciation-slider-fcf" min="0" max="100" value="30" step="5">
+        </div>
+        <div class="flex flex-col">
+            <label for="capex-slider-fcf" class="text-sm mb-1">Capital Expenditures: <span id="capex-value-fcf" class="font-semibold">40</span></label>
+            <input type="range" id="capex-slider-fcf" min="0" max="200" value="40" step="10">
+        </div>
+        <div class="flex flex-col">
+            <label for="nwc-slider-fcf" class="text-sm mb-1">Change in NWC: <span id="nwc-value-fcf" class="font-semibold">10</span></label>
+            <input type="range" id="nwc-slider-fcf" min="-50" max="50" value="10" step="5">
+        </div>
+    </div>
+
+    <!-- Dupont Analysis Content Panels (hidden initially) -->
+    <div id="info-panel-dupont" class="info-panel rounded-lg shadow-lg hidden">
+        <h2 class="text-xl font-bold mb-2">Dupont Analysis</h2>
+        <p class="text-sm">
+            $ROE = Profit\ Margin \times Asset\ Turnover \times Equity\ Multiplier$
+        </p>
+        <p class="text-xs mt-1">
+            $Profit\ Margin = \frac{Net\ Income}{Sales}$<br>
+            $Asset\ Turnover = \frac{Sales}{Total\ Assets}$<br>
+            $Equity\ Multiplier = \frac{Total\ Assets}{Shareholder's\ Equity}$
+        </p>
+        <p class="text-sm mt-2">
+            Calculated ROE: <span id="roe-value" class="font-bold text-lg text-red-400">0.00%</span>
+        </p>
+    </div>
+
+    <div id="controls-panel-dupont" class="controls-panel rounded-lg shadow-lg hidden">
+        <div class="flex flex-col">
+            <label for="ni-slider-dupont" class="text-sm mb-1">Net Income: <span id="ni-value-dupont" class="font-semibold">100</span></label>
+            <input type="range" id="ni-slider-dupont" min="0" max="500" value="100" step="10">
+        </div>
+        <div class="flex flex-col">
+            <label for="sales-slider-dupont" class="text-sm mb-1">Sales: <span id="sales-value-dupont" class="font-semibold">1000</span></label>
+            <input type="range" id="sales-slider-dupont" min="100" max="5000" value="1000" step="100">
+        </div>
+        <div class="flex flex-col">
+            <label for="ta-slider-dupont" class="text-sm mb-1">Total Assets: <span id="ta-value-dupont" class="font-semibold">500</span></label>
+            <input type="range" id="ta-slider-dupont" min="50" max="2000" value="500" step="50">
+        </div>
+        <div class="flex flex-col">
+            <label for="se-slider-dupont" class="text-sm mb-1">Shareholder's Equity: <span id="se-value-dupont" class="font-semibold">250</span></label>
+            <input type="range" id="se-slider-dupont" min="50" max="1000" value="250" step="50">
+        </div>
+    </div>
+
+
+    <canvas id="threejs-canvas"></canvas>
+
+    <!-- Three.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <script>
+        // --- Global Three.js Setup ---
+        let scene, camera, renderer;
+        let activeTab = 'npv'; // Current active tab
+
+        // NPV Visualization specific objects
+        let npvCashFlowGroup;
+        let npvValueDisplay, npvProjectStatusDisplay;
+        let npvPlane, npvXAxis, npvTimeAxisLabel;
+        let npvTimeLabels = [];
+
+        // IRR Visualization specific objects
+        let irrNPVCurveLine, irrXAxis, irrYAxis, irrIRRMarker;
+        let irrXAxisLabel, irrYAxisLabel, irrIRRValueDisplay;
+        let irrXAxisMarkers = [];
+        let irrYAxisMarkers = [];
+
+        // WACC Visualization specific objects
+        let waccGroup;
+        let waccEquitySegment, waccDebtSegment;
+        let waccValueDisplay;
+        let waccLabels = []; // Array to hold WACC text sprites
+
+        // CAPM Visualization specific objects
+        let capmGroup;
+        let capmSMLine; // Security Market Line
+        let capmAssetPoint; // Point representing the asset's expected return
+        let capmXAxis, capmYAxis;
+        let capmXAxisLabel, capmYAxisLabel;
+        let capmXAxisMarkers = [];
+        let capmYAxisMarkers = [];
+        let capmERIValueDisplay;
+
+        // EPS Visualization specific objects
+        let epsGroup;
+        let epsNetIncomeBar, epsPrefDivBar, epsEPSBar;
+        let epsLabels = [];
+        let epsValueDisplay;
+
+        // Debt-to-Equity Visualization specific objects
+        let deGroup;
+        let deDebtBar, deEquityBar;
+        let deLabels = [];
+        let deValueDisplay;
+
+        // FCF Visualization specific objects
+        let fcfGroup;
+        let fcfEBITBar, fcfDepreciationBar, fcfCapexBar, fcfNWCBar, fcfTotalFCFBar;
+        let fcfLabels = [];
+        let fcfValueDisplay;
+
+        // Dupont Visualization specific objects
+        let dupontGroup;
+        let dupontPMBar, dupontATBar, dupontEMBar, dupontROEBar;
+        let dupontLabels = [];
+        let dupontROEValueDisplay;
+
+
+        // Global parameters (initial values, shared by relevant tabs)
+        let C0_VAL = 50;
+        let CT_VAL = 20;
+        let R_VAL = 0.10;
+        let N_VAL = 5;
+
+        // WACC specific parameters
+        let KE_VAL = 0.12; // Cost of Equity
+        let KD_VAL = 0.06; // Cost of Debt
+        let E_VAL = 100;   // Market Value of Equity
+        let D_VAL = 50;    // Market Value of Debt
+        let TC_VAL = 0.25; // Corporate Tax Rate (also used in FCF)
+
+        // CAPM specific parameters
+        let RF_VAL = 0.04;  // Risk-Free Rate
+        let BETA_VAL = 1.0; // Beta of Asset
+        let MRP_VAL = 0.06; // Market Risk Premium
+
+        // EPS specific parameters
+        let NET_INCOME_EPS = 100;
+        let PREF_DIV_EPS = 10;
+        let SHARES_EPS = 100;
+
+        // Debt-to-Equity specific parameters
+        let TOTAL_DEBT_DE = 100;
+        let EQUITY_DE = 200;
+
+        // FCF specific parameters
+        let EBIT_FCF = 150;
+        let DEPRECIATION_FCF = 30;
+        let CAPEX_FCF = 40;
+        let NWC_FCF = 10; // Change in Net Working Capital
+
+        // Dupont specific parameters
+        let NET_INCOME_DUPONT = 100;
+        let SALES_DUPONT = 1000;
+        let TOTAL_ASSETS_DUPONT = 500;
+        let SHAREHOLDERS_EQUITY_DUPONT = 250;
+
+
+        // Visualization constants
+        const CYLINDER_RADIUS = 0.4;
+        const TIME_STEP_X = 2.0; // Horizontal spacing for NPV timeline
+        const IRR_PLOT_R_MIN = 0;
+        const IRR_PLOT_R_MAX = 0.5; // Max discount rate for IRR plot (0% to 50%)
+        const IRR_PLOT_NPV_MIN = -100; // Min NPV for IRR plot
+        const IRR_PLOT_NPV_MAX = 100; // Max NPV for IRR plot
+        const IRR_PLOT_WIDTH = 10;
+        const IRR_PLOT_HEIGHT = 10;
+
+        const WACC_BAR_WIDTH = 1.0;
+        const WACC_BAR_MAX_HEIGHT = 0.30; // Max WACC to scale visualization
+
+        const CAPM_PLOT_BETA_MIN = 0;
+        const CAPM_PLOT_BETA_MAX = 2.0;
+        const CAPM_PLOT_ER_MIN = 0; // Min Expected Return
+        const CAPM_PLOT_ER_MAX = 0.20; // Max Expected Return (0% to 20%)
+        const CAPM_PLOT_WIDTH = 10;
+        const CAPM_PLOT_HEIGHT = 10;
+
+        const BAR_WIDTH = 1.0; // Generic bar width for EPS, D/E, FCF, Dupont
+        const MAX_BAR_HEIGHT = 10.0; // Generic max height for scaling bars
+
+
+        // --- Helper function to create a text sprite ---
+        function createTextSprite(message, x, y, z, color = '#FFFFFF', fontSize = 32) {
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            const font = `${fontSize}px Inter`;
+            context.font = font;
+            const metrics = context.measureText(message);
+            const textWidth = metrics.width;
+            const textHeight = fontSize;
+
+            canvas.width = textWidth + 10;
+            canvas.height = textHeight + 10;
+            context.font = font;
+            context.fillStyle = color;
+            context.textAlign = 'center';
+            context.textBaseline = 'middle';
+            context.fillText(message, canvas.width / 2, canvas.height / 2);
+
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.needsUpdate = true;
+
+            const material = new THREE.SpriteMaterial({ map: texture });
+            const sprite = new THREE.Sprite(material);
+
+            sprite.scale.set(canvas.width / 100, canvas.height / 100, 1);
+            sprite.position.set(x, y, z);
+            return sprite;
+        }
+
+        // --- NPV Calculation Function ---
+        function calculateNPV(c0, ct, r, n) {
+            let npv = -c0; // Initial investment is negative
+            for (let t = 1; t <= n; t++) {
+                npv += ct / Math.pow((1 + r), t);
+            }
+            return npv;
+        }
+
+        // --- IRR Calculation Function (Newton-Raphson method) ---
+        function calculateIRR(c0, ct, n) {
+            // Define the NPV function f(r)
+            const npvFunction = (r) => calculateNPV(c0, ct, r, n);
+
+            // Define the derivative of NPV function f'(r)
+            // d(NPV)/dr = sum( -t * Ct / (1+r)^(t+1) )
+            const derivativeNPV = (r) => {
+                let deriv = 0;
+                for (let t = 1; t <= n; t++) {
+                    deriv -= t * ct / Math.pow((1 + r), (t + 1));
+                }
+                return deriv;
+            };
+
+            let r_guess = 0.1; // Initial guess for IRR
+            const tolerance = 1e-6;
+            const maxIterations = 100;
+
+            for (let i = 0; i < maxIterations; i++) {
+                const npv_val = npvFunction(r_guess);
+                const deriv_val = derivativeNPV(r_guess);
+
+                if (Math.abs(deriv_val) < 1e-9) { // Avoid division by zero
+                    break;
+                }
+
+                const r_new = r_guess - npv_val / deriv_val;
+
+                if (Math.abs(r_new - r_guess) < tolerance) {
+                    return r_new;
+                }
+                r_guess = r_new;
+            }
+            return NaN; // Return NaN if no convergence
+        }
+
+        // --- WACC Calculation Function ---
+        function calculateWACC(Ke, Kd, E, D, Tc) {
+            const V = E + D;
+            if (V === 0) return 0; // Avoid division by zero
+
+            const equityWeight = E / V;
+            const debtWeight = D / V;
+
+            const costOfEquityComponent = equityWeight * Ke;
+            const costOfDebtComponent = debtWeight * Kd * (1 - Tc);
+
+            return costOfEquityComponent + costOfDebtComponent;
+        }
+
+        // --- CAPM Calculation Function ---
+        function calculateCAPM(Rf, Beta, MRP) {
+            return Rf + Beta * MRP;
+        }
+
+        // --- EPS Calculation Function ---
+        function calculateEPS(netIncome, preferredDividends, sharesOutstanding) {
+            if (sharesOutstanding <= 0) return 0;
+            return (netIncome - preferredDividends) / sharesOutstanding;
+        }
+
+        // --- Debt-to-Equity Ratio Calculation Function ---
+        function calculateDERatio(totalDebt, shareholdersEquity) {
+            if (shareholdersEquity <= 0) return Infinity; // Handle division by zero
+            return totalDebt / shareholdersEquity;
+        }
+
+        // --- FCF Calculation Function (Simplified) ---
+        function calculateFCF(ebit, tc, depreciation, capex, nwc) {
+            const nopat = ebit * (1 - tc); // Net Operating Profit After Tax
+            return nopat + depreciation - capex - nwc;
+        }
+
+        // --- Dupont Analysis Calculation Function ---
+        function calculateDupontROE(netIncome, sales, totalAssets, shareholdersEquity) {
+            if (sales === 0 || totalAssets === 0 || shareholdersEquity === 0) return 0;
+
+            const profitMargin = netIncome / sales;
+            const assetTurnover = sales / totalAssets;
+            const equityMultiplier = totalAssets / shareholdersEquity;
+
+            return profitMargin * assetTurnover * equityMultiplier;
+        }
+
+
+        // --- Three.js Initialization ---
+        function init() {
+            const canvas = document.getElementById('threejs-canvas');
+            // Scene setup
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1a202c);
+
+            // Camera setup
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
+            renderer = new THREE.WebGLRenderer({ antialias: true, canvas: canvas });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+
+            // Add ambient light
+            const ambientLight = new THREE.AmbientLight(0x404040);
+            scene.add(ambientLight);
+
+            // Add directional light
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(1, 1, 1).normalize();
+            scene.add(directionalLight);
+
+            // --- Initialize NPV specific objects (hidden initially) ---
+            npvCashFlowGroup = new THREE.Group();
+            scene.add(npvCashFlowGroup);
+
+            npvPlane = new THREE.Mesh(
+                new THREE.PlaneGeometry(N_VAL * TIME_STEP_X + TIME_STEP_X, 2),
+                new THREE.MeshLambertMaterial({ color: 0x333333 })
+            );
+            npvPlane.rotation.x = -Math.PI / 2;
+            npvPlane.position.y = -0.01;
+            npvPlane.position.x = N_VAL * TIME_STEP_X / 2;
+            npvPlane.visible = false; // Hide initially
+            scene.add(npvPlane);
+
+            npvXAxis = new THREE.Line(
+                new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-TIME_STEP_X / 2, 0, 0), new THREE.Vector3(N_VAL * TIME_STEP_X + TIME_STEP_X / 2, 0, 0)]),
+                new THREE.LineBasicMaterial({ color: 0x888888, linewidth: 2 })
+            );
+            npvXAxis.visible = false; // Hide initially
+            scene.add(npvXAxis);
+
+            npvTimeAxisLabel = createTextSprite("Time Periods", (N_VAL * TIME_STEP_X + TIME_STEP_X) / 2, -1.0, 0, '#AAAAAA', 28);
+            npvTimeAxisLabel.visible = false; // Hide initially
+            scene.add(npvTimeAxisLabel);
+
+            // Initialize NPV HTML elements
+            npvValueDisplay = document.getElementById('npv-value');
+            npvProjectStatusDisplay = document.getElementById('project-status');
+
+            // --- Initialize IRR specific objects (hidden initially) ---
+            irrNPVCurveLine = new THREE.Line(
+                new THREE.BufferGeometry(),
+                new THREE.LineBasicMaterial({ color: 0x63b3ed, linewidth: 3 }) // Blue curve
+            );
+            irrNPVCurveLine.visible = false; // Hide initially
+            scene.add(irrNPVCurveLine);
+
+            irrIRRMarker = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.05, 0.05, IRR_PLOT_HEIGHT + 1, 16), // Vertical line marker
+                new THREE.MeshLambertMaterial({ color: 0xFFD700 }) // Gold color
+            );
+            irrIRRMarker.position.y = (IRR_PLOT_NPV_MIN + IRR_PLOT_NPV_MAX) / 2; // Center initially
+            irrIRRMarker.visible = false; // Hide initially
+            scene.add(irrIRRMarker);
+
+            // IRR Axes
+            irrXAxis = new THREE.Line(
+                new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-IRR_PLOT_WIDTH / 2, 0, 0), new THREE.Vector3(IRR_PLOT_WIDTH / 2, 0, 0)]),
+                new THREE.LineBasicMaterial({ color: 0x888888, linewidth: 2 })
+            );
+            irrXAxis.visible = false;
+            scene.add(irrXAxis);
+
+            irrYAxis = new THREE.Line(
+                new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, -IRR_PLOT_HEIGHT / 2, 0), new THREE.Vector3(0, IRR_PLOT_HEIGHT / 2, 0)]),
+                new THREE.LineBasicMaterial({ color: 0x888888, linewidth: 2 })
+            );
+            irrYAxis.visible = false;
+            scene.add(irrYAxis);
+
+            irrXAxisLabel = createTextSprite("Discount Rate (r)", 0, -IRR_PLOT_HEIGHT / 2 - 0.5, 0, '#AAAAAA', 28);
+            irrXAxisLabel.visible = false;
+            scene.add(irrXAxisLabel);
+
+            irrYAxisLabel = createTextSprite("NPV", -IRR_PLOT_WIDTH / 2 - 0.5, 0, 0, '#AAAAAA', 28);
+            irrYAxisLabel.visible = false;
+            scene.add(irrYAxisLabel);
+
+            // IRR HTML elements
+            irrIRRValueDisplay = document.getElementById('irr-value');
+
+            // --- Initialize WACC specific objects (hidden initially) ---
+            waccGroup = new THREE.Group();
+            scene.add(waccGroup);
+
+            // WACC stacked bar segments
+            waccEquitySegment = new THREE.Mesh(
+                new THREE.CylinderGeometry(WACC_BAR_WIDTH / 2, WACC_BAR_WIDTH / 2, 1, 32),
+                new THREE.MeshLambertMaterial({ color: 0x4CAF50 }) // Green for Equity (cost of equity)
+            );
+            waccEquitySegment.visible = false;
+            waccGroup.add(waccEquitySegment);
+
+            waccDebtSegment = new THREE.Mesh(
+                new THREE.CylinderGeometry(WACC_BAR_WIDTH / 2, WACC_BAR_WIDTH / 2, 1, 32),
+                new THREE.MeshLambertMaterial({ color: 0xFFD700 }) // Gold for Debt (cost of debt after tax)
+            );
+            waccDebtSegment.visible = false;
+            waccGroup.add(waccDebtSegment);
+
+            // WACC HTML elements
+            waccValueDisplay = document.getElementById('wacc-value');
+
+            // --- Initialize CAPM specific objects (hidden initially) ---
+            capmGroup = new THREE.Group();
+            scene.add(capmGroup);
+
+            // SML Line
+            capmSMLine = new THREE.Line(
+                new THREE.BufferGeometry(),
+                new THREE.LineBasicMaterial({ color: 0x800080, linewidth: 3 }) // Purple SML
+            );
+            capmSMLine.visible = false;
+            capmGroup.add(capmSMLine);
+
+            // Asset Point
+            capmAssetPoint = new THREE.Mesh(
+                new THREE.SphereGeometry(0.1, 16, 16),
+                new THREE.MeshLambertMaterial({ color: 0xFFA500 }) // Orange asset point
+            );
+            capmAssetPoint.visible = false;
+            capmGroup.add(capmAssetPoint);
+
+            // CAPM Axes
+            capmXAxis = new THREE.Line(
+                new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(CAPM_PLOT_BETA_MIN, 0, 0), new THREE.Vector3(CAPM_PLOT_BETA_MAX, 0, 0)]),
+                new THREE.LineBasicMaterial({ color: 0x888888, linewidth: 2 })
+            );
+            capmXAxis.visible = false;
+            capmGroup.add(capmXAxis);
+
+            capmYAxis = new THREE.Line(
+                new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, CAPM_PLOT_ER_MIN, 0), new THREE.Vector3(0, CAPM_PLOT_ER_MAX, 0)]),
+                new THREE.LineBasicMaterial({ color: 0x888888, linewidth: 2 })
+            );
+            capmYAxis.visible = false;
+            capmGroup.add(capmYAxis);
+
+            capmXAxisLabel = createTextSprite("Beta (β)", (CAPM_PLOT_BETA_MIN + CAPM_PLOT_BETA_MAX) / 2, -0.5, 0, '#AAAAAA', 28);
+            capmXAxisLabel.visible = false;
+            capmGroup.add(capmXAxisLabel);
+
+            capmYAxisLabel = createTextSprite("Expected Return (E(Ri))", -0.7, (CAPM_PLOT_ER_MIN + CAPM_PLOT_ER_MAX) / 2, 0, '#AAAAAA', 28);
+            capmYAxisLabel.visible = false;
+            capmGroup.add(capmYAxisLabel);
+
+            // CAPM HTML elements
+            capmERIValueDisplay = document.getElementById('eri-value');
+
+            // --- Initialize EPS specific objects (hidden initially) ---
+            epsGroup = new THREE.Group();
+            scene.add(epsGroup);
+
+            epsNetIncomeBar = new THREE.Mesh(new THREE.CylinderGeometry(BAR_WIDTH / 2, BAR_WIDTH / 2, 1, 32), new THREE.MeshLambertMaterial({ color: 0x00FF00 }));
+            epsPrefDivBar = new THREE.Mesh(new THREE.CylinderGeometry(BAR_WIDTH / 2, BAR_WIDTH / 2, 1, 32), new THREE.MeshLambertMaterial({ color: 0xFF0000 }));
+            epsEPSBar = new THREE.Mesh(new THREE.CylinderGeometry(BAR_WIDTH / 2, BAR_WIDTH / 2, 1, 32), new THREE.MeshLambertMaterial({ color: 0x63b3ed }));
+            epsGroup.add(epsNetIncomeBar, epsPrefDivBar, epsEPSBar);
+            epsNetIncomeBar.visible = epsPrefDivBar.visible = epsEPSBar.visible = false;
+            epsValueDisplay = document.getElementById('eps-value');
+
+            // --- Initialize Debt-to-Equity specific objects (hidden initially) ---
+            deGroup = new THREE.Group();
+            scene.add(deGroup);
+
+            deDebtBar = new THREE.Mesh(new THREE.CylinderGeometry(BAR_WIDTH / 2, BAR_WIDTH / 2, 1, 32), new THREE.MeshLambertMaterial({ color: 0xFFD700 }));
+            deEquityBar = new THREE.Mesh(new THREE.CylinderGeometry(BAR_WIDTH / 2, BAR_WIDTH / 2, 1, 32), new THREE.MeshLambertMaterial({ color: 0x4CAF50 }));
+            deGroup.add(deDebtBar, deEquityBar);
+            deDebtBar.visible = deEquityBar.visible = false;
+            deValueDisplay = document.getElementById('d_e-value');
+
+            // --- Initialize FCF specific objects (hidden initially) ---
+            fcfGroup = new THREE.Group();
+            scene.add(fcfGroup);
+
+            fcfEBITBar = new THREE.Mesh(new THREE.CylinderGeometry(BAR_WIDTH / 2, BAR_WIDTH / 2, 1, 32), new THREE.MeshLambertMaterial({ color: 0x00FF00 }));
+            fcfDepreciationBar = new THREE.Mesh(new THREE.CylinderGeometry(BAR_WIDTH / 2, BAR_WIDTH / 2, 1, 32), new THREE.MeshLambertMaterial({ color: 0x90EE90 })); // Light green
+            fcfCapexBar = new THREE.Mesh(new THREE.CylinderGeometry(BAR_WIDTH / 2, BAR_WIDTH / 2, 1, 32), new THREE.MeshLambertMaterial({ color: 0xFF0000 }));
+            fcfNWCBar = new THREE.Mesh(new THREE.CylinderGeometry(BAR_WIDTH / 2, BAR_WIDTH / 2, 1, 32), new THREE.MeshLambertMaterial({ color: 0xFFA07A })); // Light salmon
+            fcfTotalFCFBar = new THREE.Mesh(new THREE.CylinderGeometry(BAR_WIDTH / 2, BAR_WIDTH / 2, 1, 32), new THREE.MeshLambertMaterial({ color: 0x800080 })); // Purple for FCF
+            fcfGroup.add(fcfEBITBar, fcfDepreciationBar, fcfCapexBar, fcfNWCBar, fcfTotalFCFBar);
+            fcfEBITBar.visible = fcfDepreciationBar.visible = fcfCapexBar.visible = fcfNWCBar.visible = fcfTotalFCFBar.visible = false;
+            fcfValueDisplay = document.getElementById('fcf-value');
+
+            // --- Initialize Dupont specific objects (hidden initially) ---
+            dupontGroup = new THREE.Group();
+            scene.add(dupontGroup);
+
+            dupontPMBar = new THREE.Mesh(new THREE.CylinderGeometry(BAR_WIDTH / 2, BAR_WIDTH / 2, 1, 32), new THREE.MeshLambertMaterial({ color: 0x00FF00 })); // Green
+            dupontATBar = new THREE.Mesh(new THREE.CylinderGeometry(BAR_WIDTH / 2, BAR_WIDTH / 2, 1, 32), new THREE.MeshLambertMaterial({ color: 0x63b3ed })); // Blue
+            dupontEMBar = new THREE.Mesh(new THREE.CylinderGeometry(BAR_WIDTH / 2, BAR_WIDTH / 2, 1, 32), new THREE.MeshLambertMaterial({ color: 0xFFD700 })); // Gold
+            dupontROEBar = new THREE.Mesh(new THREE.CylinderGeometry(BAR_WIDTH / 2, BAR_WIDTH / 2, 1, 32), new THREE.MeshLambertMaterial({ color: 0xFF0000 })); // Red for ROE
+            dupontGroup.add(dupontPMBar, dupontATBar, dupontEMBar, dupontROEBar);
+            dupontPMBar.visible = dupontATBar.visible = dupontEMBar.visible = dupontROEBar.visible = false;
+            dupontROEValueDisplay = document.getElementById('roe-value');
+
+
+            // --- Set up event listeners for controls ---
+            setupNPVControls();
+            setupIRRControls();
+            setupWACCControls();
+            setupCAPMControls();
+            setupEPSControls(); // New
+            setupDEControls(); // New
+            setupFCFControls(); // New
+            setupDupontControls(); // New
+
+            // Initial tab display
+            showTab('npv');
+
+            // Handle window resizing
+            window.addEventListener('resize', onWindowResize, false);
+        }
+
+        // --- Control Setup Functions ---
+        function setupNPVControls() {
+            const c0Slider = document.getElementById('c0-slider-npv');
+            const ctSlider = document.getElementById('ct-slider-npv');
+            const rSlider = document.getElementById('r-slider-npv');
+            const nSlider = document.getElementById('n-slider-npv');
+
+            const c0ValueSpan = document.getElementById('c0-value-npv');
+            const ctValueSpan = document.getElementById('ct-value-npv');
+            const rValueSpan = document.getElementById('r-value-npv');
+            const nValueSpan = document.getElementById('n-value-npv');
+
+            c0Slider.value = C0_VAL;
+            ctSlider.value = CT_VAL;
+            rSlider.value = R_VAL;
+            nSlider.value = N_VAL;
+
+            c0ValueSpan.textContent = C0_VAL.toFixed(0);
+            ctValueSpan.textContent = CT_VAL.toFixed(0);
+            rValueSpan.textContent = (R_VAL * 100).toFixed(1) + '%';
+            nValueSpan.textContent = N_VAL.toFixed(0);
+
+            c0Slider.addEventListener('input', (event) => { C0_VAL = parseFloat(event.target.value); c0ValueSpan.textContent = C0_VAL.toFixed(0); updateVisualization(); });
+            ctSlider.addEventListener('input', (event) => { CT_VAL = parseFloat(event.target.value); ctValueSpan.textContent = CT_VAL.toFixed(0); updateVisualization(); });
+            rSlider.addEventListener('input', (event) => { R_VAL = parseFloat(event.target.value); rValueSpan.textContent = (R_VAL * 100).toFixed(1) + '%'; updateVisualization(); });
+            nSlider.addEventListener('input', (event) => { N_VAL = parseInt(event.target.value); nValueSpan.textContent = N_VAL.toFixed(0); updateVisualization(); });
+        }
+
+        function setupIRRControls() {
+            const c0Slider = document.getElementById('c0-slider-irr');
+            const ctSlider = document.getElementById('ct-slider-irr');
+            const nSlider = document.getElementById('n-slider-irr');
+
+            const c0ValueSpan = document.getElementById('c0-value-irr');
+            const ctValueSpan = document.getElementById('ct-value-irr');
+            const nValueSpan = document.getElementById('n-value-irr');
+
+            c0Slider.value = C0_VAL;
+            ctSlider.value = CT_VAL;
+            nSlider.value = N_VAL;
+
+            c0ValueSpan.textContent = C0_VAL.toFixed(0);
+            ctValueSpan.textContent = CT_VAL.toFixed(0);
+            nValueSpan.textContent = N_VAL.toFixed(0);
+
+            c0Slider.addEventListener('input', (event) => { C0_VAL = parseFloat(event.target.value); c0ValueSpan.textContent = C0_VAL.toFixed(0); updateVisualization(); });
+            ctSlider.addEventListener('input', (event) => { CT_VAL = parseFloat(event.target.value); ctValueSpan.textContent = CT_VAL.toFixed(0); updateVisualization(); });
+            nSlider.addEventListener('input', (event) => { N_VAL = parseInt(event.target.value); nValueSpan.textContent = N_VAL.toFixed(0); updateVisualization(); });
+        }
+
+        function setupWACCControls() {
+            const keSlider = document.getElementById('ke-slider-wacc');
+            const kdSlider = document.getElementById('kd-slider-wacc');
+            const eSlider = document.getElementById('e-slider-wacc');
+            const dSlider = document.getElementById('d-slider-wacc');
+            const tcSlider = document.getElementById('tc-slider-wacc');
+
+            const keValueSpan = document.getElementById('ke-value-wacc');
+            const kdValueSpan = document.getElementById('kd-value-wacc');
+            const eValueSpan = document.getElementById('e-value-wacc');
+            const dValueSpan = document.getElementById('d-value-wacc');
+            const tcValueSpan = document.getElementById('tc-value-wacc');
+
+            keSlider.value = KE_VAL;
+            kdSlider.value = KD_VAL;
+            eSlider.value = E_VAL;
+            dSlider.value = D_VAL;
+            tcSlider.value = TC_VAL;
+
+            keValueSpan.textContent = (KE_VAL * 100).toFixed(1) + '%';
+            kdValueSpan.textContent = (KD_VAL * 100).toFixed(1) + '%';
+            eValueSpan.textContent = E_VAL.toFixed(0);
+            dValueSpan.textContent = D_VAL.toFixed(0);
+            tcValueSpan.textContent = (TC_VAL * 100).toFixed(1) + '%';
+
+            keSlider.addEventListener('input', (event) => { KE_VAL = parseFloat(event.target.value); keValueSpan.textContent = (KE_VAL * 100).toFixed(1) + '%'; updateVisualization(); });
+            kdSlider.addEventListener('input', (event) => { KD_VAL = parseFloat(event.target.value); kdValueSpan.textContent = (KD_VAL * 100).toFixed(1) + '%'; updateVisualization(); });
+            eSlider.addEventListener('input', (event) => { E_VAL = parseFloat(event.target.value); eValueSpan.textContent = E_VAL.toFixed(0); updateVisualization(); });
+            dSlider.addEventListener('input', (event) => { D_VAL = parseFloat(event.target.value); dValueSpan.textContent = D_VAL.toFixed(0); updateVisualization(); });
+            tcSlider.addEventListener('input', (event) => { TC_VAL = parseFloat(event.target.value); tcValueSpan.textContent = (TC_VAL * 100).toFixed(1) + '%'; updateVisualization(); });
+        }
+
+        function setupCAPMControls() {
+            const rfSlider = document.getElementById('rf-slider-capm');
+            const betaSlider = document.getElementById('beta-slider-capm');
+            const mrpSlider = document.getElementById('mrp-slider-capm');
+
+            const rfValueSpan = document.getElementById('rf-value-capm');
+            const betaValueSpan = document.getElementById('beta-value-capm');
+            const mrpValueSpan = document.getElementById('mrp-value-capm');
+
+            rfSlider.value = RF_VAL;
+            betaSlider.value = BETA_VAL;
+            mrpSlider.value = MRP_VAL;
+
+            rfValueSpan.textContent = (RF_VAL * 100).toFixed(1) + '%';
+            betaValueSpan.textContent = BETA_VAL.toFixed(2);
+            mrpValueSpan.textContent = (MRP_VAL * 100).toFixed(1) + '%';
+
+            rfSlider.addEventListener('input', (event) => { RF_VAL = parseFloat(event.target.value); rfValueSpan.textContent = (RF_VAL * 100).toFixed(1) + '%'; updateVisualization(); });
+            betaSlider.addEventListener('input', (event) => { BETA_VAL = parseFloat(event.target.value); betaValueSpan.textContent = BETA_VAL.toFixed(2); updateVisualization(); });
+            mrpSlider.addEventListener('input', (event) => { MRP_VAL = parseFloat(event.target.value); mrpValueSpan.textContent = (MRP_VAL * 100).toFixed(1) + '%'; updateVisualization(); });
+        }
+
+        function setupEPSControls() {
+            const netIncomeSlider = document.getElementById('net-income-slider-eps');
+            const prefDivSlider = document.getElementById('pref-div-slider-eps');
+            const sharesSlider = document.getElementById('shares-slider-eps');
+
+            const netIncomeValueSpan = document.getElementById('net-income-value-eps');
+            const prefDivValueSpan = document.getElementById('pref-div-value-eps');
+            const sharesValueSpan = document.getElementById('shares-value-eps');
+
+            netIncomeSlider.value = NET_INCOME_EPS;
+            prefDivSlider.value = PREF_DIV_EPS;
+            sharesSlider.value = SHARES_EPS;
+
+            netIncomeValueSpan.textContent = NET_INCOME_EPS.toFixed(0);
+            prefDivValueSpan.textContent = PREF_DIV_EPS.toFixed(0);
+            sharesValueSpan.textContent = SHARES_EPS.toFixed(0);
+
+            netIncomeSlider.addEventListener('input', (event) => { NET_INCOME_EPS = parseFloat(event.target.value); netIncomeValueSpan.textContent = NET_INCOME_EPS.toFixed(0); updateVisualization(); });
+            prefDivSlider.addEventListener('input', (event) => { PREF_DIV_EPS = parseFloat(event.target.value); prefDivValueSpan.textContent = PREF_DIV_EPS.toFixed(0); updateVisualization(); });
+            sharesSlider.addEventListener('input', (event) => { SHARES_EPS = parseFloat(event.target.value); sharesValueSpan.textContent = SHARES_EPS.toFixed(0); updateVisualization(); });
+        }
+
+        function setupDEControls() {
+            const totalDebtSlider = document.getElementById('total-debt-slider-d_e');
+            const equitySlider = document.getElementById('equity-slider-d_e');
+
+            const totalDebtValueSpan = document.getElementById('total-debt-value-d_e');
+            const equityValueSpan = document.getElementById('equity-value-d_e');
+
+            totalDebtSlider.value = TOTAL_DEBT_DE;
+            equitySlider.value = EQUITY_DE;
+
+            totalDebtValueSpan.textContent = TOTAL_DEBT_DE.toFixed(0);
+            equityValueSpan.textContent = EQUITY_DE.toFixed(0);
+
+            totalDebtSlider.addEventListener('input', (event) => { TOTAL_DEBT_DE = parseFloat(event.target.value); totalDebtValueSpan.textContent = TOTAL_DEBT_DE.toFixed(0); updateVisualization(); });
+            equitySlider.addEventListener('input', (event) => { EQUITY_DE = parseFloat(event.target.value); equityValueSpan.textContent = EQUITY_DE.toFixed(0); updateVisualization(); });
+        }
+
+        function setupFCFControls() {
+            const ebitSlider = document.getElementById('ebit-slider-fcf');
+            const tcSlider = document.getElementById('tc-slider-fcf');
+            const depreciationSlider = document.getElementById('depreciation-slider-fcf');
+            const capexSlider = document.getElementById('capex-slider-fcf');
+            const nwcSlider = document.getElementById('nwc-slider-fcf');
+
+            const ebitValueSpan = document.getElementById('ebit-value-fcf');
+            const tcValueSpan = document.getElementById('tc-value-fcf');
+            const depreciationValueSpan = document.getElementById('depreciation-value-fcf');
+            const capexValueSpan = document.getElementById('capex-value-fcf');
+            const nwcValueSpan = document.getElementById('nwc-value-fcf');
+
+            ebitSlider.value = EBIT_FCF;
+            tcSlider.value = TC_VAL; // Reuse TC_VAL
+            depreciationSlider.value = DEPRECIATION_FCF;
+            capexSlider.value = CAPEX_FCF;
+            nwcSlider.value = NWC_FCF;
+
+            ebitValueSpan.textContent = EBIT_FCF.toFixed(0);
+            tcValueSpan.textContent = (TC_VAL * 100).toFixed(1) + '%';
+            depreciationValueSpan.textContent = DEPRECIATION_FCF.toFixed(0);
+            capexValueSpan.textContent = CAPEX_FCF.toFixed(0);
+            nwcValueSpan.textContent = NWC_FCF.toFixed(0);
+
+            ebitSlider.addEventListener('input', (event) => { EBIT_FCF = parseFloat(event.target.value); ebitValueSpan.textContent = EBIT_FCF.toFixed(0); updateVisualization(); });
+            tcSlider.addEventListener('input', (event) => { TC_VAL = parseFloat(event.target.value); tcValueSpan.textContent = (TC_VAL * 100).toFixed(1) + '%'; updateVisualization(); });
+            depreciationSlider.addEventListener('input', (event) => { DEPRECIATION_FCF = parseFloat(event.target.value); depreciationValueSpan.textContent = DEPRECIATION_FCF.toFixed(0); updateVisualization(); });
+            capexSlider.addEventListener('input', (event) => { CAPEX_FCF = parseFloat(event.target.value); capexValueSpan.textContent = CAPEX_FCF.toFixed(0); updateVisualization(); });
+            nwcSlider.addEventListener('input', (event) => { NWC_FCF = parseFloat(event.target.value); nwcValueSpan.textContent = NWC_FCF.toFixed(0); updateVisualization(); });
+        }
+
+        function setupDupontControls() {
+            const niSlider = document.getElementById('ni-slider-dupont');
+            const salesSlider = document.getElementById('sales-slider-dupont');
+            const taSlider = document.getElementById('ta-slider-dupont');
+            const seSlider = document.getElementById('se-slider-dupont');
+
+            const niValueSpan = document.getElementById('ni-value-dupont');
+            const salesValueSpan = document.getElementById('sales-value-dupont');
+            const taValueSpan = document.getElementById('ta-value-dupont');
+            const seValueSpan = document.getElementById('se-value-dupont');
+
+            niSlider.value = NET_INCOME_DUPONT;
+            salesSlider.value = SALES_DUPONT;
+            taSlider.value = TOTAL_ASSETS_DUPONT;
+            seSlider.value = SHAREHOLDERS_EQUITY_DUPONT;
+
+            niValueSpan.textContent = NET_INCOME_DUPONT.toFixed(0);
+            salesValueSpan.textContent = SALES_DUPONT.toFixed(0);
+            taValueSpan.textContent = TOTAL_ASSETS_DUPONT.toFixed(0);
+            seValueSpan.textContent = SHAREHOLDERS_EQUITY_DUPONT.toFixed(0);
+
+            niSlider.addEventListener('input', (event) => { NET_INCOME_DUPONT = parseFloat(event.target.value); niValueSpan.textContent = NET_INCOME_DUPONT.toFixed(0); updateVisualization(); });
+            salesSlider.addEventListener('input', (event) => { SALES_DUPONT = parseFloat(event.target.value); salesValueSpan.textContent = SALES_DUPONT.toFixed(0); updateVisualization(); });
+            taSlider.addEventListener('input', (event) => { TOTAL_ASSETS_DUPONT = parseFloat(event.target.value); taValueSpan.textContent = TOTAL_ASSETS_DUPONT.toFixed(0); updateVisualization(); });
+            seSlider.addEventListener('input', (event) => { SHAREHOLDERS_EQUITY_DUPONT = parseFloat(event.target.value); seValueSpan.textContent = SHAREHOLDERS_EQUITY_DUPONT.toFixed(0); updateVisualization(); });
+        }
+
+
+        // --- Visualization Update Function (Main) ---
+        function updateVisualization() {
+            // Sync slider values across relevant tabs
+            // NPV/IRR parameters
+            document.getElementById('c0-slider-npv').value = C0_VAL;
+            document.getElementById('c0-value-npv').textContent = C0_VAL.toFixed(0);
+            document.getElementById('c0-slider-irr').value = C0_VAL;
+            document.getElementById('c0-value-irr').textContent = C0_VAL.toFixed(0);
+
+            document.getElementById('ct-slider-npv').value = CT_VAL;
+            document.getElementById('ct-value-npv').textContent = CT_VAL.toFixed(0);
+            document.getElementById('ct-slider-irr').value = CT_VAL;
+            document.getElementById('ct-value-irr').textContent = CT_VAL.toFixed(0);
+
+            document.getElementById('n-slider-npv').value = N_VAL;
+            document.getElementById('n-value-npv').textContent = N_VAL.toFixed(0);
+            document.getElementById('n-slider-irr').value = N_VAL;
+            document.getElementById('n-value-irr').textContent = N_VAL.toFixed(0);
+
+            // WACC parameters
+            document.getElementById('ke-slider-wacc').value = KE_VAL;
+            document.getElementById('ke-value-wacc').textContent = (KE_VAL * 100).toFixed(1) + '%';
+            document.getElementById('kd-slider-wacc').value = KD_VAL;
+            document.getElementById('kd-value-wacc').textContent = (KD_VAL * 100).toFixed(1) + '%';
+            document.getElementById('e-slider-wacc').value = E_VAL;
+            document.getElementById('e-value-wacc').textContent = E_VAL.toFixed(0);
+            document.getElementById('d-slider-wacc').value = D_VAL;
+            document.getElementById('d-value-wacc').textContent = D_VAL.toFixed(0);
+            document.getElementById('tc-slider-wacc').value = TC_VAL;
+            document.getElementById('tc-value-wacc').textContent = (TC_VAL * 100).toFixed(1) + '%';
+            document.getElementById('tc-slider-fcf').value = TC_VAL; // Sync with FCF tab
+            document.getElementById('tc-value-fcf').textContent = (TC_VAL * 100).toFixed(1) + '%';
+
+
+            // CAPM parameters
+            document.getElementById('rf-slider-capm').value = RF_VAL;
+            document.getElementById('rf-value-capm').textContent = (RF_VAL * 100).toFixed(1) + '%';
+            document.getElementById('beta-slider-capm').value = BETA_VAL;
+            document.getElementById('beta-value-capm').textContent = BETA_VAL.toFixed(2);
+            document.getElementById('mrp-slider-capm').value = MRP_VAL;
+            document.getElementById('mrp-value-capm').textContent = (MRP_VAL * 100).toFixed(1) + '%';
+
+            // EPS parameters
+            document.getElementById('net-income-slider-eps').value = NET_INCOME_EPS;
+            document.getElementById('net-income-value-eps').textContent = NET_INCOME_EPS.toFixed(0);
+            document.getElementById('pref-div-slider-eps').value = PREF_DIV_EPS;
+            document.getElementById('pref-div-value-eps').textContent = PREF_DIV_EPS.toFixed(0);
+            document.getElementById('shares-slider-eps').value = SHARES_EPS;
+            document.getElementById('shares-value-eps').textContent = SHARES_EPS.toFixed(0);
+
+            // Debt-to-Equity parameters
+            document.getElementById('total-debt-slider-d_e').value = TOTAL_DEBT_DE;
+            document.getElementById('total-debt-value-d_e').textContent = TOTAL_DEBT_DE.toFixed(0);
+            document.getElementById('equity-slider-d_e').value = EQUITY_DE;
+            document.getElementById('equity-value-d_e').textContent = EQUITY_DE.toFixed(0);
+
+            // FCF parameters
+            document.getElementById('ebit-slider-fcf').value = EBIT_FCF;
+            document.getElementById('ebit-value-fcf').textContent = EBIT_FCF.toFixed(0);
+            // TC_VAL synced above
+            document.getElementById('depreciation-slider-fcf').value = DEPRECIATION_FCF;
+            document.getElementById('depreciation-value-fcf').textContent = DEPRECIATION_FCF.toFixed(0);
+            document.getElementById('capex-slider-fcf').value = CAPEX_FCF;
+            document.getElementById('capex-value-fcf').textContent = CAPEX_FCF.toFixed(0);
+            document.getElementById('nwc-slider-fcf').value = NWC_FCF;
+            document.getElementById('nwc-value-fcf').textContent = NWC_FCF.toFixed(0);
+
+            // Dupont parameters
+            document.getElementById('ni-slider-dupont').value = NET_INCOME_DUPONT;
+            document.getElementById('ni-value-dupont').textContent = NET_INCOME_DUPONT.toFixed(0);
+            document.getElementById('sales-slider-dupont').value = SALES_DUPONT;
+            document.getElementById('sales-value-dupont').textContent = SALES_DUPONT.toFixed(0);
+            document.getElementById('ta-slider-dupont').value = TOTAL_ASSETS_DUPONT;
+            document.getElementById('ta-value-dupont').textContent = TOTAL_ASSETS_DUPONT.toFixed(0);
+            document.getElementById('se-slider-dupont').value = SHAREHOLDERS_EQUITY_DUPONT;
+            document.getElementById('se-value-dupont').textContent = SHAREHOLDERS_EQUITY_DUPONT.toFixed(0);
+
+
+            if (activeTab === 'npv') {
+                updateNPVVisualization();
+            } else if (activeTab === 'irr') {
+                updateIRRVisualization();
+            } else if (activeTab === 'wacc') {
+                updateWACCVisualization();
+            } else if (activeTab === 'capm') {
+                updateCAPMVisualization();
+            } else if (activeTab === 'eps') {
+                updateEPSVisualization();
+            } else if (activeTab === 'd_e') {
+                updateDEVisualization();
+            } else if (activeTab === 'fcf') {
+                updateFCFVisualization();
+            } else if (activeTab === 'dupont') {
+                updateDupontVisualization();
+            }
+        }
+
+        // --- NPV Visualization Update Logic ---
+        function updateNPVVisualization() {
+            // Clear previous cash flows
+            while(npvCashFlowGroup.children.length > 0){
+                const object = npvCashFlowGroup.children[0];
+                object.geometry.dispose();
+                object.material.dispose();
+                npvCashFlowGroup.remove(object);
+            }
+            // Clear previous time labels
+            npvTimeLabels.forEach(label => scene.remove(label));
+            npvTimeLabels = [];
+
+            let totalNPV = 0;
+
+            // Initial Investment (C0) - Outflow
+            const c0_pv = -C0_VAL; // Initial investment is negative
+            const c0_height = Math.abs(c0_pv) / 5; // Scale height for visualization
+            const c0_cylinder = new THREE.Mesh(
+                new THREE.CylinderGeometry(CYLINDER_RADIUS, CYLINDER_RADIUS, c0_height, 32),
+                new THREE.MeshLambertMaterial({ color: 0xFF0000 }) // Red for outflow
+            );
+            c0_cylinder.position.set(0, -c0_height / 2, 0); // Position below timeline
+            npvCashFlowGroup.add(c0_cylinder);
+
+            const c0_label = createTextSprite(`C0: ${C0_VAL.toFixed(0)}`, 0, -c0_height - 0.5, 0, '#FF0000', 24);
+            npvCashFlowGroup.add(c0_label);
+
+            totalNPV += c0_pv;
+
+            // Future Cash Flows (Ct) - Inflows
+            for (let t = 1; t <= N_VAL; t++) {
+                const presentValue = CT_VAL / Math.pow((1 + R_VAL), t);
+                const cf_height = presentValue / 5; // Scale height for visualization
+
+                const cf_cylinder = new THREE.Mesh(
+                    new THREE.CylinderGeometry(CYLINDER_RADIUS, CYLINDER_RADIUS, cf_height, 32),
+                    new THREE.MeshLambertMaterial({ color: 0x00FF00 }) // Green for inflow
+                );
+                cf_cylinder.position.set(t * TIME_STEP_X, cf_height / 2, 0); // Position above timeline
+                npvCashFlowGroup.add(cf_cylinder);
+
+                const cf_label = createTextSprite(`PV: ${presentValue.toFixed(2)}`, t * TIME_STEP_X, cf_height + 0.5, 0, '#00FF00', 24);
+                npvCashFlowGroup.add(cf_label);
+
+                totalNPV += presentValue;
+            }
+
+            // Update NPV display
+            npvValueDisplay.textContent = totalNPV.toFixed(2);
+            if (totalNPV > 0.01) { // Use a small epsilon for comparison to zero
+                npvValueDisplay.className = "font-bold text-lg text-green-400";
+                npvProjectStatusDisplay.textContent = "Accept";
+                npvProjectStatusDisplay.className = "font-bold text-lg text-green-400";
+            } else if (totalNPV < -0.01) { // Use a small epsilon for comparison to zero
+                npvValueDisplay.className = "font-bold text-lg text-red-400";
+                npvProjectStatusDisplay.textContent = "Reject";
+                npvProjectStatusDisplay.className = "font-bold text-lg text-red-400";
+            } else {
+                npvValueDisplay.className = "font-bold text-lg text-gray-400";
+                npvProjectStatusDisplay.textContent = "Neutral";
+                npvProjectStatusDisplay.className = "font-bold text-lg text-gray-400";
+            }
+
+            // Re-adjust camera and plane for new N_VAL
+            camera.position.set(N_VAL * TIME_STEP_X / 2, 10, N_VAL * TIME_STEP_X / 2 + 5);
+            camera.lookAt(N_VAL * TIME_STEP_X / 2, 0, 0);
+            npvPlane.geometry.dispose();
+            npvPlane.geometry = new THREE.PlaneGeometry(N_VAL * TIME_STEP_X + TIME_STEP_X, 2);
+            npvPlane.position.x = N_VAL * TIME_STEP_X / 2;
+            npvXAxis.geometry.dispose();
+            npvXAxis.geometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-TIME_STEP_X / 2, 0, 0), new THREE.Vector3(N_VAL * TIME_STEP_X + TIME_STEP_X / 2, 0, 0)]);
+            npvTimeAxisLabel.position.x = (N_VAL * TIME_STEP_X + TIME_STEP_X) / 2;
+
+            // Re-add time labels for NPV
+            for (let t = 0; t <= N_VAL; t++) {
+                const label = createTextSprite(`t=${t}`, t * TIME_STEP_X, -0.5, 0, '#AAAAAA', 24);
+                label.userData.isTimeLabel = true;
+                npvTimeLabels.push(label);
+                scene.add(label);
+            }
+        }
+
+        // --- IRR Visualization Update Logic ---
+        function updateIRRVisualization() {
+            const irrPoints = [];
+            const r_step = 0.005; // Step size for discount rate
+            let calculatedIRR = NaN;
+
+            // Calculate NPV for a range of discount rates
+            for (let r_plot = IRR_PLOT_R_MIN; r_plot <= IRR_PLOT_R_MAX; r_plot += r_step) {
+                const npv_at_r = calculateNPV(C0_VAL, CT_VAL, r_plot, N_VAL);
+                // Map r_plot to X-coordinate, npv_at_r to Y-coordinate
+                const x_coord = THREE.MathUtils.mapLinear(r_plot, IRR_PLOT_R_MIN, IRR_PLOT_R_MAX, -IRR_PLOT_WIDTH / 2, IRR_PLOT_WIDTH / 2);
+                const y_coord = THREE.MathUtils.mapLinear(npv_at_r, IRR_PLOT_NPV_MIN, IRR_PLOT_NPV_MAX, -IRR_PLOT_HEIGHT / 2, IRR_PLOT_HEIGHT / 2);
+                irrPoints.push(new THREE.Vector3(x_coord, y_coord, 0));
+            }
+
+            irrNPVCurveLine.geometry.setFromPoints(irrPoints);
+
+            // Calculate IRR numerically
+            calculatedIRR = calculateIRR(C0_VAL, CT_VAL, N_VAL);
+
+            // Update IRR display
+            if (!isNaN(calculatedIRR) && calculatedIRR >= IRR_PLOT_R_MIN && calculatedIRR <= IRR_PLOT_R_MAX) {
+                irrIRRValueDisplay.textContent = (calculatedIRR * 100).toFixed(2) + '%';
+                irrIRRValueDisplay.className = "font-bold text-lg text-purple-400";
+
+                // Position IRR marker
+                const irr_x_pos = THREE.MathUtils.mapLinear(calculatedIRR, IRR_PLOT_R_MIN, IRR_PLOT_R_MAX, -IRR_PLOT_WIDTH / 2, IRR_PLOT_WIDTH / 2);
+                irrIRRMarker.position.x = irr_x_pos;
+                irrIRRMarker.visible = true;
+            } else {
+                irrIRRValueDisplay.textContent = "N/A";
+                irrIRRValueDisplay.className = "font-bold text-lg text-gray-400";
+                irrIRRMarker.visible = false;
+            }
+
+            // Update IRR axis markers
+            irrXAxisMarkers.forEach(marker => scene.remove(marker));
+            irrXAxisMarkers = [];
+            for (let r_tick = IRR_PLOT_R_MIN; r_tick <= IRR_PLOT_R_MAX; r_tick += 0.1) { // 10% increments
+                const x_coord = THREE.MathUtils.mapLinear(r_tick, IRR_PLOT_R_MIN, IRR_PLOT_R_MAX, -IRR_PLOT_WIDTH / 2, IRR_PLOT_WIDTH / 2);
+                const marker = createTextSprite(`${(r_tick * 100).toFixed(0)}%`, x_coord, -IRR_PLOT_HEIGHT / 2 - 0.2, 0, '#AAAAAA', 20);
+                irrXAxisMarkers.push(marker);
+                scene.add(marker);
+            }
+
+            irrYAxisMarkers.forEach(marker => scene.remove(marker));
+            irrYAxisMarkers = [];
+            for (let npv_tick = IRR_PLOT_NPV_MIN; npv_tick <= IRR_PLOT_NPV_MAX; npv_tick += 25) { // 25 unit increments
+                if (npv_tick === 0) continue; // Avoid double labeling 0
+                const y_coord = THREE.MathUtils.mapLinear(npv_tick, IRR_PLOT_NPV_MIN, IRR_PLOT_NPV_MAX, -IRR_PLOT_HEIGHT / 2, IRR_PLOT_HEIGHT / 2);
+                const marker = createTextSprite(`${npv_tick.toFixed(0)}`, -IRR_PLOT_WIDTH / 2 - 0.2, y_coord, 0, '#AAAAAA', 20);
+                irrYAxisMarkers.push(marker);
+                scene.add(marker);
+            }
+
+            // Camera for IRR tab
+            camera.position.set(0, 0, 8); // Center camera on IRR plot
+            camera.lookAt(0, 0, 0);
+        }
+
+        // --- WACC Visualization Update Logic ---
+        function updateWACCVisualization() {
+            // Clear existing WACC labels
+            waccLabels.forEach(label => {
+                if (label.material.map) label.material.map.dispose();
+                label.material.dispose();
+                waccGroup.remove(label);
+            });
+            waccLabels = [];
+
+            const totalWACC = calculateWACC(KE_VAL, KD_VAL, E_VAL, D_VAL, TC_VAL);
+
+            const V = E_VAL + D_VAL;
+            const equityWeight = E_VAL / V;
+            const debtWeight = D_VAL / V;
+
+            const weightedKe = equityWeight * KE_VAL;
+            const weightedKdAfterTax = debtWeight * KD_VAL * (1 - TC_VAL);
+
+            // Scale heights for visualization
+            const scaleFactor = 10 / WACC_BAR_MAX_HEIGHT; // Scale to fit within a reasonable range
+            const equityHeight = weightedKe * scaleFactor;
+            const debtHeight = weightedKdAfterTax * scaleFactor;
+            const totalWACCHeight = totalWACC * scaleFactor;
+
+            // Update Equity Segment
+            waccEquitySegment.geometry.dispose();
+            waccEquitySegment.geometry = new THREE.CylinderGeometry(WACC_BAR_WIDTH / 2, WACC_BAR_WIDTH / 2, equityHeight, 32);
+            waccEquitySegment.position.set(0, equityHeight / 2, 0); // Position above 0
+            waccEquitySegment.visible = true;
+
+            // Update Debt Segment
+            waccDebtSegment.geometry.dispose();
+            waccDebtSegment.geometry = new THREE.CylinderGeometry(WACC_BAR_WIDTH / 2, WACC_BAR_WIDTH / 2, debtHeight, 32);
+            waccDebtSegment.position.set(0, equityHeight + debtHeight / 2, 0); // Stack on top of equity
+            waccDebtSegment.visible = true;
+
+            // Add labels
+            const equityLabel = createTextSprite(`Equity: ${(weightedKe * 100).toFixed(2)}%`, 0, equityHeight / 2, CYLINDER_RADIUS + 0.2, '#00FF00', 24);
+            waccLabels.push(equityLabel);
+            waccGroup.add(equityLabel);
+
+            const debtLabel = createTextSprite(`Debt (After Tax): ${(weightedKdAfterTax * 100).toFixed(2)}%`, 0, equityHeight + debtHeight / 2, CYLINDER_RADIUS + 0.2, '#FFD700', 24);
+            waccLabels.push(debtLabel);
+            waccGroup.add(debtLabel);
+
+            const totalWACCLabel = createTextSprite(`Total WACC: ${(totalWACC * 100).toFixed(2)}%`, 0, totalWACCHeight + 0.5, 0, '#63b3ed', 30);
+            waccLabels.push(totalWACCLabel);
+            waccGroup.add(totalWACCLabel);
+
+            // Update WACC HTML display
+            waccValueDisplay.textContent = (totalWACC * 100).toFixed(2) + '%';
+            waccValueDisplay.className = "font-bold text-lg text-blue-400"; // Blue for WACC
+
+            // Camera for WACC tab
+            camera.position.set(0, totalWACCHeight / 2 + 2, 8); // Center camera on WACC bar
+            camera.lookAt(0, totalWACCHeight / 2, 0);
+        }
+
+        // --- CAPM Visualization Update Logic ---
+        function updateCAPMVisualization() {
+            // Clear existing CAPM axis markers
+            capmXAxisMarkers.forEach(marker => scene.remove(marker));
+            capmXAxisMarkers = [];
+            capmYAxisMarkers.forEach(marker => scene.remove(marker));
+            capmYAxisMarkers = [];
+
+            const smlPoints = [];
+            const beta_step = 0.1;
+
+            // Plot SML
+            for (let beta_plot = CAPM_PLOT_BETA_MIN; beta_plot <= CAPM_PLOT_BETA_MAX; beta_plot += beta_step) {
+                const expectedReturn = calculateCAPM(RF_VAL, beta_plot, MRP_VAL);
+                const x_coord = THREE.MathUtils.mapLinear(beta_plot, CAPM_PLOT_BETA_MIN, CAPM_PLOT_BETA_MAX, -CAPM_PLOT_WIDTH / 2, CAPM_PLOT_WIDTH / 2);
+                const y_coord = THREE.MathUtils.mapLinear(expectedReturn, CAPM_PLOT_ER_MIN, CAPM_PLOT_ER_MAX, -CAPM_PLOT_HEIGHT / 2, CAPM_PLOT_HEIGHT / 2);
+                smlPoints.push(new THREE.Vector3(x_coord, y_coord, 0));
+            }
+            capmSMLine.geometry.setFromPoints(smlPoints);
+
+            // Position Asset Point
+            const assetExpectedReturn = calculateCAPM(RF_VAL, BETA_VAL, MRP_VAL);
+            const asset_x_pos = THREE.MathUtils.mapLinear(BETA_VAL, CAPM_PLOT_BETA_MIN, CAPM_PLOT_BETA_MAX, -CAPM_PLOT_WIDTH / 2, CAPM_PLOT_WIDTH / 2);
+            const asset_y_pos = THREE.MathUtils.mapLinear(assetExpectedReturn, CAPM_PLOT_ER_MIN, CAPM_PLOT_ER_MAX, -CAPM_PLOT_HEIGHT / 2, CAPM_PLOT_HEIGHT / 2);
+            capmAssetPoint.position.set(asset_x_pos, asset_y_pos, 0.01); // Slight Z-offset
+            capmAssetPoint.visible = true;
+
+            // Update HTML display
+            capmERIValueDisplay.textContent = (assetExpectedReturn * 100).toFixed(2) + '%';
+            capmERIValueDisplay.className = "font-bold text-lg text-orange-400";
+
+            // Update CAPM axis markers
+            for (let beta_tick = CAPM_PLOT_BETA_MIN; beta_tick <= CAPM_PLOT_BETA_MAX; beta_tick += 0.5) {
+                const x_coord = THREE.MathUtils.mapLinear(beta_tick, CAPM_PLOT_BETA_MIN, CAPM_PLOT_BETA_MAX, -CAPM_PLOT_WIDTH / 2, CAPM_PLOT_WIDTH / 2);
+                const marker = createTextSprite(`${beta_tick.toFixed(1)}`, x_coord, -CAPM_PLOT_HEIGHT / 2 - 0.2, 0, '#AAAAAA', 20);
+                capmXAxisMarkers.push(marker);
+                scene.add(marker);
+            }
+
+            for (let er_tick = CAPM_PLOT_ER_MIN; er_tick <= CAPM_PLOT_ER_MAX; er_tick += 0.05) { // 5% increments
+                if (er_tick === 0) continue;
+                const y_coord = THREE.MathUtils.mapLinear(er_tick, CAPM_PLOT_ER_MIN, CAPM_PLOT_ER_MAX, -CAPM_PLOT_HEIGHT / 2, CAPM_PLOT_HEIGHT / 2);
+                const marker = createTextSprite(`${(er_tick * 100).toFixed(0)}%`, -CAPM_PLOT_WIDTH / 2 - 0.2, y_coord, 0, '#AAAAAA', 20);
+                capmYAxisMarkers.push(marker);
+                scene.add(marker);
+            }
+
+            // Camera for CAPM tab
+            camera.position.set(0, 0, 8); // Center camera on CAPM plot
+            camera.lookAt(0, 0, 0);
+        }
+
+        // --- EPS Visualization Update Logic ---
+        function updateEPSVisualization() {
+            epsLabels.forEach(label => {
+                if (label.material.map) label.material.map.dispose();
+                label.material.dispose();
+                epsGroup.remove(label);
+            });
+            epsLabels = [];
+
+            const calculatedEPS = calculateEPS(NET_INCOME_EPS, PREF_DIV_EPS, SHARES_EPS);
+
+            // Scale heights for visualization
+            const incomeHeight = NET_INCOME_EPS / 50 * MAX_BAR_HEIGHT;
+            const prefDivHeight = PREF_DIV_EPS / 50 * MAX_BAR_HEIGHT;
+            const epsHeight = Math.abs(calculatedEPS) / 5 * MAX_BAR_HEIGHT; // Scale EPS for visibility
+
+            // Update bars
+            epsNetIncomeBar.geometry.dispose();
+            epsNetIncomeBar.geometry = new THREE.CylinderGeometry(BAR_WIDTH / 2, BAR_WIDTH / 2, incomeHeight, 32);
+            epsNetIncomeBar.position.set(-BAR_WIDTH * 1.5, incomeHeight / 2, 0);
+            epsNetIncomeBar.visible = true;
+
+            epsPrefDivBar.geometry.dispose();
+            epsPrefDivBar.geometry = new THREE.CylinderGeometry(BAR_WIDTH / 2, BAR_WIDTH / 2, prefDivHeight, 32);
+            epsPrefDivBar.position.set(0, prefDivHeight / 2, 0);
+            epsPrefDivBar.visible = true;
+
+            epsEPSBar.geometry.dispose();
+            epsEPSBar.geometry = new THREE.CylinderGeometry(BAR_WIDTH / 2, BAR_WIDTH / 2, epsHeight, 32);
+            epsEPSBar.position.set(BAR_WIDTH * 1.5, epsHeight / 2, 0);
+            epsEPSBar.visible = true;
+
+            // Add labels
+            epsLabels.push(createTextSprite(`Net Income: ${NET_INCOME_EPS.toFixed(0)}`, -BAR_WIDTH * 1.5, incomeHeight + 0.5, 0, '#00FF00', 24));
+            epsLabels.push(createTextSprite(`Pref. Div: ${PREF_DIV_EPS.toFixed(0)}`, 0, prefDivHeight + 0.5, 0, '#FF0000', 24));
+            epsLabels.push(createTextSprite(`Shares: ${SHARES_EPS.toFixed(0)}`, 0, -0.5, 0, '#AAAAAA', 20)); // Shares below 0 axis
+            epsLabels.push(createTextSprite(`EPS: ${calculatedEPS.toFixed(2)}`, BAR_WIDTH * 1.5, epsHeight + 0.5, 0, '#63b3ed', 30));
+
+            epsLabels.forEach(label => epsGroup.add(label));
+
+            // Update HTML display
+            epsValueDisplay.textContent = calculatedEPS.toFixed(2);
+            epsValueDisplay.className = `font-bold text-lg ${calculatedEPS >= 0 ? 'text-green-400' : 'text-red-400'}`;
+
+            // Camera for EPS tab
+            camera.position.set(0, MAX_BAR_HEIGHT / 2, 8);
+            camera.lookAt(0, MAX_BAR_HEIGHT / 2, 0);
+        }
+
+        // --- Debt-to-Equity Visualization Update Logic ---
+        function updateDEVisualization() {
+            deLabels.forEach(label => {
+                if (label.material.map) label.material.map.dispose();
+                label.material.dispose();
+                deGroup.remove(label);
+            });
+            deLabels = [];
+
+            const calculatedDERatio = calculateDERatio(TOTAL_DEBT_DE, EQUITY_DE);
+
+            // Scale heights for visualization
+            const debtHeight = TOTAL_DEBT_DE / 100 * MAX_BAR_HEIGHT;
+            const equityHeight = EQUITY_DE / 100 * MAX_BAR_HEIGHT;
+
+            // Update bars
+            deDebtBar.geometry.dispose();
+            deDebtBar.geometry = new THREE.CylinderGeometry(BAR_WIDTH / 2, BAR_WIDTH / 2, debtHeight, 32);
+            deDebtBar.position.set(-BAR_WIDTH, debtHeight / 2, 0);
+            deDebtBar.visible = true;
+
+            deEquityBar.geometry.dispose();
+            deEquityBar.geometry = new THREE.CylinderGeometry(BAR_WIDTH / 2, BAR_WIDTH / 2, equityHeight, 32);
+            deEquityBar.position.set(BAR_WIDTH, equityHeight / 2, 0);
+            deEquityBar.visible = true;
+
+            // Add labels
+            deLabels.push(createTextSprite(`Total Debt: ${TOTAL_DEBT_DE.toFixed(0)}`, -BAR_WIDTH, debtHeight + 0.5, 0, '#FFD700', 24));
+            deLabels.push(createTextSprite(`Shareholder's Equity: ${EQUITY_DE.toFixed(0)}`, BAR_WIDTH, equityHeight + 0.5, 0, '#4CAF50', 24));
+            deLabels.push(createTextSprite(`D/E Ratio: ${calculatedDERatio.toFixed(2)}`, 0, MAX_BAR_HEIGHT + 1, 0, '#FFD700', 30));
+
+            deLabels.forEach(label => deGroup.add(label));
+
+            // Update HTML display
+            deValueDisplay.textContent = calculatedDERatio.toFixed(2);
+            deValueDisplay.className = "font-bold text-lg text-yellow-400";
+
+            // Camera for D/E tab
+            camera.position.set(0, MAX_BAR_HEIGHT / 2, 8);
+            camera.lookAt(0, MAX_BAR_HEIGHT / 2, 0);
+        }
+
+        // --- FCF Visualization Update Logic ---
+        function updateFCFVisualization() {
+            fcfLabels.forEach(label => {
+                if (label.material.map) label.material.map.dispose();
+                label.material.dispose();
+                fcfGroup.remove(label);
+            });
+            fcfLabels = [];
+
+            const calculatedFCF = calculateFCF(EBIT_FCF, TC_VAL, DEPRECIATION_FCF, CAPEX_FCF, NWC_FCF);
+
+            // Scale heights for visualization (adjust max value for better scaling)
+            const maxVal = Math.max(EBIT_FCF, DEPRECIATION_FCF, CAPEX_FCF, Math.abs(NWC_FCF), Math.abs(calculatedFCF), 100); // Ensure min scale
+            const scaleFactor = MAX_BAR_HEIGHT / maxVal;
+
+            const nopat = EBIT_FCF * (1 - TC_VAL);
+
+            const ebitHeight = EBIT_FCF * scaleFactor;
+            const nopatHeight = nopat * scaleFactor;
+            const depreciationHeight = DEPRECIATION_FCF * scaleFactor;
+            const capexHeight = CAPEX_FCF * scaleFactor;
+            const nwcHeight = Math.abs(NWC_FCF) * scaleFactor;
+            const fcfHeight = Math.abs(calculatedFCF) * scaleFactor;
+
+            // Update bars
+            fcfEBITBar.geometry.dispose();
+            fcfEBITBar.geometry = new THREE.CylinderGeometry(BAR_WIDTH / 2, BAR_WIDTH / 2, ebitHeight, 32);
+            fcfEBITBar.position.set(-BAR_WIDTH * 2, ebitHeight / 2, 0);
+            fcfEBITBar.visible = true;
+
+            // NOPAT (derived, not a direct input bar, but useful for flow)
+            const nopatBar = new THREE.Mesh(new THREE.CylinderGeometry(BAR_WIDTH / 2, BAR_WIDTH / 2, nopatHeight, 32), new THREE.MeshLambertMaterial({ color: 0x00BFFF })); // Deep Sky Blue
+            nopatBar.position.set(-BAR_WIDTH, nopatHeight / 2, 0);
+            fcfGroup.add(nopatBar);
+            fcfLabels.push(createTextSprite(`NOPAT: ${nopat.toFixed(0)}`, -BAR_WIDTH, nopatHeight + 0.5, 0, '#00BFFF', 24));
+
+            fcfDepreciationBar.geometry.dispose();
+            fcfDepreciationBar.geometry = new THREE.CylinderGeometry(BAR_WIDTH / 2, BAR_WIDTH / 2, depreciationHeight, 32);
+            fcfDepreciationBar.position.set(0, depreciationHeight / 2, 0);
+            fcfDepreciationBar.visible = true;
+
+            fcfCapexBar.geometry.dispose();
+            fcfCapexBar.geometry = new THREE.CylinderGeometry(BAR_WIDTH / 2, BAR_WIDTH / 2, capexHeight, 32);
+            fcfCapexBar.position.set(BAR_WIDTH, -capexHeight / 2, 0); // Negative contribution
+            fcfCapexBar.visible = true;
+
+            fcfNWCBar.geometry.dispose();
+            fcfNWCBar.geometry = new THREE.CylinderGeometry(BAR_WIDTH / 2, BAR_WIDTH / 2, nwcHeight, 32);
+            fcfNWCBar.position.set(BAR_WIDTH * 2, (NWC_FCF >= 0 ? -nwcHeight / 2 : nwcHeight / 2), 0); // Negative if NWC increases
+            fcfNWCBar.visible = true;
+
+
+            fcfTotalFCFBar.geometry.dispose();
+            fcfTotalFCFBar.geometry = new THREE.CylinderGeometry(BAR_WIDTH / 2, BAR_WIDTH / 2, fcfHeight, 32);
+            fcfTotalFCFBar.position.set(BAR_WIDTH * 3, (calculatedFCF >= 0 ? fcfHeight / 2 : -fcfHeight / 2), 0);
+            fcfTotalFCFBar.visible = true;
+
+
+            // Add labels
+            fcfLabels.push(createTextSprite(`EBIT: ${EBIT_FCF.toFixed(0)}`, -BAR_WIDTH * 2, ebitHeight + 0.5, 0, '#00FF00', 24));
+            fcfLabels.push(createTextSprite(`Depreciation: ${DEPRECIATION_FCF.toFixed(0)}`, 0, depreciationHeight + 0.5, 0, '#90EE90', 24));
+            fcfLabels.push(createTextSprite(`CapEx: ${CAPEX_FCF.toFixed(0)}`, BAR_WIDTH, -capexHeight - 0.5, 0, '#FF0000', 24));
+            fcfLabels.push(createTextSprite(`Chg NWC: ${NWC_FCF.toFixed(0)}`, BAR_WIDTH * 2, (NWC_FCF >= 0 ? -nwcHeight - 0.5 : nwcHeight + 0.5), 0, '#FCA07A', 24));
+            fcfLabels.push(createTextSprite(`FCF: ${calculatedFCF.toFixed(2)}`, BAR_WIDTH * 3, (calculatedFCF >= 0 ? fcfHeight + 0.5 : -fcfHeight - 0.5), 0, '#800080', 30));
+
+            fcfLabels.forEach(label => fcfGroup.add(label));
+
+            // Update HTML display
+            fcfValueDisplay.textContent = calculatedFCF.toFixed(2);
+            fcfValueDisplay.className = `font-bold text-lg ${calculatedFCF >= 0 ? 'text-purple-400' : 'text-red-400'}`;
+
+            // Camera for FCF tab
+            camera.position.set(BAR_WIDTH * 1.5, MAX_BAR_HEIGHT / 2, 8);
+            camera.lookAt(BAR_WIDTH * 1.5, MAX_BAR_HEIGHT / 2, 0);
+        }
+
+        // --- Dupont Visualization Update Logic ---
+        function updateDupontVisualization() {
+            dupontLabels.forEach(label => {
+                if (label.material.map) label.material.map.dispose();
+                label.material.dispose();
+                dupontGroup.remove(label);
+            });
+            dupontLabels = [];
+
+            const profitMargin = NET_INCOME_DUPONT / SALES_DUPONT;
+            const assetTurnover = SALES_DUPONT / TOTAL_ASSETS_DUPONT;
+            const equityMultiplier = TOTAL_ASSETS_DUPONT / SHAREHOLDERS_EQUITY_DUPONT;
+            const calculatedROE = calculateDupontROE(NET_INCOME_DUPONT, SALES_DUPONT, TOTAL_ASSETS_DUPONT, SHAREHOLDERS_EQUITY_DUPONT);
+
+            // Scale heights for visualization (ratios will be between 0 and ~5 usually)
+            const maxRatio = Math.max(profitMargin, assetTurnover, equityMultiplier, calculatedROE, 0.5); // Ensure min scale
+            const scaleFactor = MAX_BAR_HEIGHT / maxRatio;
+
+            const pmHeight = profitMargin * scaleFactor;
+            const atHeight = assetTurnover * scaleFactor;
+            const emHeight = equityMultiplier * scaleFactor;
+            const roeHeight = calculatedROE * scaleFactor;
+
+            // Update bars
+            dupontPMBar.geometry.dispose();
+            dupontPMBar.geometry = new THREE.CylinderGeometry(BAR_WIDTH / 2, BAR_WIDTH / 2, pmHeight, 32);
+            dupontPMBar.position.set(-BAR_WIDTH * 1.5, pmHeight / 2, 0);
+            dupontPMBar.visible = true;
+
+            dupontATBar.geometry.dispose();
+            dupontATBar.geometry = new THREE.CylinderGeometry(BAR_WIDTH / 2, BAR_WIDTH / 2, atHeight, 32);
+            dupontATBar.position.set(0, atHeight / 2, 0);
+            dupontATBar.visible = true;
+
+            dupontEMBar.geometry.dispose();
+            dupontEMBar.geometry = new THREE.CylinderGeometry(BAR_WIDTH / 2, BAR_WIDTH / 2, emHeight, 32);
+            dupontEMBar.position.set(BAR_WIDTH * 1.5, emHeight / 2, 0);
+            dupontEMBar.visible = true;
+
+            dupontROEBar.geometry.dispose();
+            dupontROEBar.geometry = new THREE.CylinderGeometry(BAR_WIDTH / 2, BAR_WIDTH / 2, roeHeight, 32);
+            dupontROEBar.position.set(BAR_WIDTH * 3, roeHeight / 2, 0);
+            dupontROEBar.visible = true;
+
+            // Add labels
+            dupontLabels.push(createTextSprite(`PM: ${(profitMargin * 100).toFixed(2)}%`, -BAR_WIDTH * 1.5, pmHeight + 0.5, 0, '#00FF00', 24));
+            dupontLabels.push(createTextSprite(`AT: ${(assetTurnover).toFixed(2)}x`, 0, atHeight + 0.5, 0, '#63b3ed', 24));
+            dupontLabels.push(createTextSprite(`EM: ${(equityMultiplier).toFixed(2)}x`, BAR_WIDTH * 1.5, emHeight + 0.5, 0, '#FFD700', 24));
+            dupontLabels.push(createTextSprite(`ROE: ${(calculatedROE * 100).toFixed(2)}%`, BAR_WIDTH * 3, roeHeight + 0.5, 0, '#FF0000', 30));
+
+            dupontLabels.forEach(label => dupontGroup.add(label));
+
+            // Update HTML display
+            dupontROEValueDisplay.textContent = (calculatedROE * 100).toFixed(2) + '%';
+            dupontROEValueDisplay.className = `font-bold text-lg ${calculatedROE >= 0 ? 'text-red-400' : 'text-blue-400'}`; // ROE is typically red for positive
+
+            // Camera for Dupont tab
+            camera.position.set(BAR_WIDTH * 1.5, MAX_BAR_HEIGHT / 2, 8);
+            camera.lookAt(BAR_WIDTH * 1.5, MAX_BAR_HEIGHT / 2, 0);
+        }
+
+
+        // --- Tab Switching Logic ---
+        function showTab(tabName) {
+            activeTab = tabName;
+
+            // Hide/show HTML info and controls panels
+            document.getElementById('info-panel-npv').classList.add('hidden');
+            document.getElementById('controls-panel-npv').classList.add('hidden');
+            document.getElementById('info-panel-irr').classList.add('hidden');
+            document.getElementById('controls-panel-irr').classList.add('hidden');
+            document.getElementById('info-panel-wacc').classList.add('hidden');
+            document.getElementById('controls-panel-wacc').classList.add('hidden');
+            document.getElementById('info-panel-capm').classList.add('hidden');
+            document.getElementById('controls-panel-capm').classList.add('hidden');
+            document.getElementById('info-panel-eps').classList.add('hidden'); // New
+            document.getElementById('controls-panel-eps').classList.add('hidden'); // New
+            document.getElementById('info-panel-d_e').classList.add('hidden'); // New
+            document.getElementById('controls-panel-d_e').classList.add('hidden'); // New
+            document.getElementById('info-panel-fcf').classList.add('hidden'); // New
+            document.getElementById('controls-panel-fcf').classList.add('hidden'); // New
+            document.getElementById('info-panel-dupont').classList.add('hidden'); // New
+            document.getElementById('controls-panel-dupont').classList.add('hidden'); // New
+
+
+            document.getElementById(`info-panel-${tabName}`).classList.remove('hidden');
+            document.getElementById(`controls-panel-${tabName}`).classList.remove('hidden');
+
+            // Deactivate all tab buttons
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+
+            // Activate current tab button
+            document.querySelector(`.tab-button[onclick="showTab('${tabName}')"]`).classList.add('active');
+
+            // Toggle visibility of Three.js objects
+            npvCashFlowGroup.visible = (tabName === 'npv');
+            npvPlane.visible = (tabName === 'npv');
+            npvXAxis.visible = (tabName === 'npv');
+            npvTimeAxisLabel.visible = (tabName === 'npv');
+            npvTimeLabels.forEach(label => label.visible = (tabName === 'npv'));
+
+            irrNPVCurveLine.visible = (tabName === 'irr');
+            irrIRRMarker.visible = (tabName === 'irr' && !isNaN(calculateIRR(C0_VAL, CT_VAL, N_VAL))); // Only show if IRR is valid
+            irrXAxis.visible = (tabName === 'irr');
+            irrYAxis.visible = (tabName === 'irr');
+            irrXAxisLabel.visible = (tabName === 'irr');
+            irrYAxisLabel.visible = (tabName === 'irr');
+            irrXAxisMarkers.forEach(marker => marker.visible = (tabName === 'irr'));
+            irrYAxisMarkers.forEach(marker => marker.visible = (tabName === 'irr'));
+
+            waccGroup.visible = (tabName === 'wacc');
+            waccEquitySegment.visible = (tabName === 'wacc');
+            waccDebtSegment.visible = (tabName === 'wacc');
+            waccLabels.forEach(label => label.visible = (tabName === 'wacc'));
+
+            capmGroup.visible = (tabName === 'capm');
+            capmSMLine.visible = (tabName === 'capm');
+            capmAssetPoint.visible = (tabName === 'capm');
+            capmXAxis.visible = (tabName === 'capm');
+            capmYAxis.visible = (tabName === 'capm');
+            capmXAxisLabel.visible = (tabName === 'capm');
+            capmYAxisLabel.visible = (tabName === 'capm');
+            capmXAxisMarkers.forEach(marker => marker.visible = (tabName === 'capm'));
+            capmYAxisMarkers.forEach(marker => marker.visible = (tabName === 'capm'));
+
+            epsGroup.visible = (tabName === 'eps'); // New
+            epsNetIncomeBar.visible = (tabName === 'eps');
+            epsPrefDivBar.visible = (tabName === 'eps');
+            epsEPSBar.visible = (tabName === 'eps');
+            epsLabels.forEach(label => label.visible = (tabName === 'eps'));
+
+            deGroup.visible = (tabName === 'd_e'); // New
+            deDebtBar.visible = (tabName === 'd_e');
+            deEquityBar.visible = (tabName === 'd_e');
+            deLabels.forEach(label => label.visible = (tabName === 'd_e'));
+
+            fcfGroup.visible = (tabName === 'fcf'); // New
+            fcfEBITBar.visible = (tabName === 'fcf');
+            // NOPAT bar is dynamically created, so its visibility is handled in updateFCFVisualization
+            fcfDepreciationBar.visible = (tabName === 'fcf');
+            fcfCapexBar.visible = (tabName === 'fcf');
+            fcfNWCBar.visible = (tabName === 'fcf');
+            fcfTotalFCFBar.visible = (tabName === 'fcf');
+            fcfLabels.forEach(label => label.visible = (tabName === 'fcf'));
+
+            dupontGroup.visible = (tabName === 'dupont'); // New
+            dupontPMBar.visible = (tabName === 'dupont');
+            dupontATBar.visible = (tabName === 'dupont');
+            dupontEMBar.visible = (tabName === 'dupont');
+            dupontROEBar.visible = (tabName === 'dupont');
+            dupontLabels.forEach(label => label.visible = (tabName === 'dupont'));
+
+
+            // Update the visualization for the newly active tab
+            updateVisualization();
+        }
+
+        // --- Animation Loop ---
+        function animate() {
+            requestAnimationFrame(animate);
+            renderer.render(scene, camera);
+        }
+
+        // --- Handle Window Resize ---
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // --- Initialize on Window Load ---
+        window.onload = function() {
+            init();
+            animate();
+        };
+    </script>
+</body>
+</html>
+
