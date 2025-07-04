@@ -110,6 +110,22 @@
         .hidden {
             display: none !important;
         }
+        #tooltip {
+            position: absolute;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: #e2e8f0;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.375rem; /* rounded-md */
+            font-size: 0.875rem; /* text-sm */
+            pointer-events: none; /* Allows mouse events to pass through */
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+            z-index: 100; /* Ensure it's on top */
+            white-space: nowrap;
+        }
+        #tooltip.active {
+            opacity: 1;
+        }
     </style>
 </head>
 <body>
@@ -146,19 +162,19 @@
 
     <div id="controls-panel-npv" class="controls-panel rounded-lg shadow-lg">
         <div class="flex flex-col">
-            <label for="c0-slider-npv" class="text-sm mb-1">Initial Investment (C0): <span id="c0-value-npv" class="font-semibold">50</span></label>
+            <label for="c0-slider-npv" class="text-sm mb-1" title="Initial cash outflow at time t=0">Initial Investment (C0): <span id="c0-value-npv" class="font-semibold">50</span></label>
             <input type="range" id="c0-slider-npv" min="0" max="200" value="50" step="1">
         </div>
         <div class="flex flex-col">
-            <label for="ct-slider-npv" class="text-sm mb-1">Annual Cash Flow (Ct): <span id="ct-value-npv" class="font-semibold">20</span></label>
+            <label for="ct-slider-npv" class="text-sm mb-1" title="Constant cash inflow for each period after initial investment">Annual Cash Flow (Ct): <span id="ct-value-npv" class="font-semibold">20</span></label>
             <input type="range" id="ct-slider-npv" min="0" max="100" value="20" step="1">
         </div>
         <div class="flex flex-col">
-            <label for="r-slider-npv" class="text-sm mb-1">Discount Rate (r): <span id="r-value-npv" class="font-semibold">10.0%</span></label>
+            <label for="r-slider-npv" class="text-sm mb-1" title="The discount rate used to calculate present values">Discount Rate (r): <span id="r-value-npv" class="font-semibold">10.0%</span></label>
             <input type="range" id="r-slider-npv" min="0.01" max="0.30" value="0.10" step="0.01">
         </div>
         <div class="flex flex-col">
-            <label for="n-slider-npv" class="text-sm mb-1">Number of Periods (n): <span id="n-value-npv" class="font-semibold">5</span></label>
+            <label for="n-slider-npv" class="text-sm mb-1" title="Number of periods over which cash flows occur">Number of Periods (n): <span id="n-value-npv" class="font-semibold">5</span></label>
             <input type="range" id="n-slider-npv" min="1" max="10" value="5" step="1">
         </div>
     </div>
@@ -180,15 +196,15 @@
 
     <div id="controls-panel-irr" class="controls-panel rounded-lg shadow-lg hidden">
         <div class="flex flex-col">
-            <label for="c0-slider-irr" class="text-sm mb-1">Initial Investment (C0): <span id="c0-value-irr" class="font-semibold">50</span></label>
+            <label for="c0-slider-irr" class="text-sm mb-1" title="Initial cash outflow at time t=0">Initial Investment (C0): <span id="c0-value-irr" class="font-semibold">50</span></label>
             <input type="range" id="c0-slider-irr" min="0" max="200" value="50" step="1">
         </div>
         <div class="flex flex-col">
-            <label for="ct-slider-irr" class="text-sm mb-1">Annual Cash Flow (Ct): <span id="ct-value-irr" class="font-semibold">20</span></label>
+            <label for="ct-slider-irr" class="text-sm mb-1" title="Constant cash inflow for each period after initial investment">Annual Cash Flow (Ct): <span id="ct-value-irr" class="font-semibold">20</span></label>
             <input type="range" id="ct-slider-irr" min="0" max="100" value="20" step="1">
         </div>
         <div class="flex flex-col">
-            <label for="n-slider-irr" class="text-sm mb-1">Number of Periods (n): <span id="n-value-irr" class="font-semibold">5</span></label>
+            <label for="n-slider-irr" class="text-sm mb-1" title="Number of periods over which cash flows occur">Number of Periods (n): <span id="n-value-irr" class="font-semibold">5</span></label>
             <input type="range" id="n-slider-irr" min="1" max="10" value="5" step="1">
         </div>
     </div>
@@ -214,23 +230,23 @@
 
     <div id="controls-panel-wacc" class="controls-panel rounded-lg shadow-lg hidden">
         <div class="flex flex-col">
-            <label for="ke-slider-wacc" class="text-sm mb-1">Cost of Equity (Ke): <span id="ke-value-wacc" class="font-semibold">12.0%</span></label>
+            <label for="ke-slider-wacc" class="text-sm mb-1" title="The rate of return required by equity investors">Cost of Equity (Ke): <span id="ke-value-wacc" class="font-semibold">12.0%</span></label>
             <input type="range" id="ke-slider-wacc" min="0.01" max="0.30" value="0.12" step="0.01">
         </div>
         <div class="flex flex-col">
-            <label for="kd-slider-wacc" class="text-sm mb-1">Cost of Debt (Kd): <span id="kd-value-wacc" class="font-semibold">6.0%</span></label>
+            <label for="kd-slider-wacc" class="text-sm mb-1" title="The interest rate a company pays on its debt">Cost of Debt (Kd): <span id="kd-value-wacc" class="font-semibold">6.0%</span></label>
             <input type="range" id="kd-slider-wacc" min="0.01" max="0.20" value="0.06" step="0.01">
         </div>
         <div class="flex flex-col">
-            <label for="e-slider-wacc" class="text-sm mb-1">Market Value of Equity (E): <span id="e-value-wacc" class="font-semibold">100</span></label>
+            <label for="e-slider-wacc" class="text-sm mb-1" title="The total value of a company's outstanding shares">Market Value of Equity (E): <span id="e-value-wacc" class="font-semibold">100</span></label>
             <input type="range" id="e-slider-wacc" min="10" max="500" value="100" step="10">
         </div>
         <div class="flex flex-col">
-            <label for="d-slider-wacc" class="text-sm mb-1">Market Value of Debt (D): <span id="d-value-wacc" class="font-semibold">50</span></label>
+            <label for="d-slider-wacc" class="text-sm mb-1" title="The total value of a company's outstanding debt">Market Value of Debt (D): <span id="d-value-wacc" class="font-semibold">50</span></label>
             <input type="range" id="d-slider-wacc" min="10" max="500" value="50" step="10">
         </div>
         <div class="flex flex-col">
-            <label for="tc-slider-wacc" class="text-sm mb-1">Corporate Tax Rate (Tc): <span id="tc-value-wacc" class="font-semibold">25.0%</span></label>
+            <label for="tc-slider-wacc" class="text-sm mb-1" title="The corporate income tax rate applicable to the company">Corporate Tax Rate (Tc): <span id="tc-value-wacc" class="font-semibold">25.0%</span></label>
             <input type="range" id="tc-slider-wacc" min="0.0" max="0.50" value="0.25" step="0.01">
         </div>
     </div>
@@ -254,15 +270,15 @@
 
     <div id="controls-panel-capm" class="controls-panel rounded-lg shadow-lg hidden">
         <div class="flex flex-col">
-            <label for="rf-slider-capm" class="text-sm mb-1">Risk-Free Rate (Rf): <span id="rf-value-capm" class="font-semibold">4.0%</span></label>
+            <label for="rf-slider-capm" class="text-sm mb-1" title="The theoretical return of an investment with zero risk">Risk-Free Rate (Rf): <span id="rf-value-capm" class="font-semibold">4.0%</span></label>
             <input type="range" id="rf-slider-capm" min="0.01" max="0.10" value="0.04" step="0.005">
         </div>
         <div class="flex flex-col">
-            <label for="beta-slider-capm" class="text-sm mb-1">Beta (β): <span id="beta-value-capm" class="font-semibold">1.00</span></label>
+            <label for="beta-slider-capm" class="text-sm mb-1" title="A measure of the volatility, or systematic risk, of an investment compared to the market">Beta (β): <span id="beta-value-capm" class="font-semibold">1.00</span></label>
             <input type="range" id="beta-slider-capm" min="0.5" max="2.0" value="1.0" step="0.05">
         </div>
         <div class="flex flex-col">
-            <label for="mrp-slider-capm" class="text-sm mb-1">Market Risk Premium (MRP): <span id="mrp-value-capm" class="font-semibold">6.0%</span></label>
+            <label for="mrp-slider-capm" class="text-sm mb-1" title="The expected return of the market in excess of the risk-free rate">Market Risk Premium (MRP): <span id="mrp-value-capm" class="font-semibold">6.0%</span></label>
             <input type="range" id="mrp-slider-capm" min="0.03" max="0.10" value="0.06" step="0.005">
         </div>
     </div>
@@ -280,15 +296,15 @@
 
     <div id="controls-panel-eps" class="controls-panel rounded-lg shadow-lg hidden">
         <div class="flex flex-col">
-            <label for="net-income-slider-eps" class="text-sm mb-1">Net Income: <span id="net-income-value-eps" class="font-semibold">100</span></label>
+            <label for="net-income-slider-eps" class="text-sm mb-1" title="The company's profit after all expenses and taxes">Net Income: <span id="net-income-value-eps" class="font-semibold">100</span></label>
             <input type="range" id="net-income-slider-eps" min="0" max="500" value="100" step="10">
         </div>
         <div class="flex flex-col">
-            <label for="pref-div-slider-eps" class="text-sm mb-1">Preferred Dividends: <span id="pref-div-value-eps" class="font-semibold">10</span></label>
+            <label for="pref-div-slider-eps" class="text-sm mb-1" title="Dividends paid to preferred shareholders, deducted before common EPS calculation">Preferred Dividends: <span id="pref-div-value-eps" class="font-semibold">10</span></label>
             <input type="range" id="pref-div-slider-eps" min="0" max="100" value="10" step="5">
         </div>
         <div class="flex flex-col">
-            <label for="shares-slider-eps" class="text-sm mb-1">Shares Outstanding: <span id="shares-value-eps" class="font-semibold">100</span></label>
+            <label for="shares-slider-eps" class="text-sm mb-1" title="The number of shares of common stock currently held by investors">Shares Outstanding: <span id="shares-value-eps" class="font-semibold">100</span></label>
             <input type="range" id="shares-slider-eps" min="10" max="500" value="100" step="10">
         </div>
     </div>
@@ -306,11 +322,11 @@
 
     <div id="controls-panel-d_e" class="controls-panel rounded-lg shadow-lg hidden">
         <div class="flex flex-col">
-            <label for="total-debt-slider-d_e" class="text-sm mb-1">Total Debt: <span id="total-debt-value-d_e" class="font-semibold">100</span></label>
+            <label for="total-debt-slider-d_e" class="text-sm mb-1" title="The sum of all short-term and long-term financial obligations">Total Debt: <span id="total-debt-value-d_e" class="font-semibold">100</span></label>
             <input type="range" id="total-debt-slider-d_e" min="0" max="500" value="100" step="10">
         </div>
         <div class="flex flex-col">
-            <label for="equity-slider-d_e" class="text-sm mb-1">Shareholder's Equity: <span id="equity-value-d_e" class="font-semibold">200</span></label>
+            <label for="equity-slider-d_e" class="text-sm mb-1" title="The total value of assets minus total liabilities">Shareholder's Equity: <span id="equity-value-d_e" class="font-semibold">200</span></label>
             <input type="range" id="equity-slider-d_e" min="10" max="500" value="200" step="10">
         </div>
     </div>
@@ -335,23 +351,23 @@
 
     <div id="controls-panel-fcf" class="controls-panel rounded-lg shadow-lg hidden">
         <div class="flex flex-col">
-            <label for="ebit-slider-fcf" class="text-sm mb-1">EBIT: <span id="ebit-value-fcf" class="font-semibold">150</span></label>
+            <label for="ebit-slider-fcf" class="text-sm mb-1" title="Earnings before interest and taxes">EBIT: <span id="ebit-value-fcf" class="font-semibold">150</span></label>
             <input type="range" id="ebit-slider-fcf" min="0" max="500" value="150" step="10">
         </div>
         <div class="flex flex-col">
-            <label for="tc-slider-fcf" class="text-sm mb-1">Corporate Tax Rate (Tc): <span id="tc-value-fcf" class="font-semibold">25.0%</span></label>
+            <label for="tc-slider-fcf" class="text-sm mb-1" title="The corporate income tax rate">Corporate Tax Rate (Tc): <span id="tc-value-fcf" class="font-semibold">25.0%</span></label>
             <input type="range" id="tc-slider-fcf" min="0.0" max="0.50" value="0.25" step="0.01">
         </div>
         <div class="flex flex-col">
-            <label for="depreciation-slider-fcf" class="text-sm mb-1">Depreciation: <span id="depreciation-value-fcf" class="font-semibold">30</span></label>
+            <label for="depreciation-slider-fcf" class="text-sm mb-1" title="Non-cash expense that reduces the value of an asset over time">Depreciation: <span id="depreciation-value-fcf" class="font-semibold">30</span></label>
             <input type="range" id="depreciation-slider-fcf" min="0" max="100" value="30" step="5">
         </div>
         <div class="flex flex-col">
-            <label for="capex-slider-fcf" class="text-sm mb-1">Capital Expenditures: <span id="capex-value-fcf" class="font-semibold">40</span></label>
+            <label for="capex-slider-fcf" class="text-sm mb-1" title="Funds used by a company to acquire, upgrade, and maintain physical assets">Capital Expenditures: <span id="capex-value-fcf" class="font-semibold">40</span></label>
             <input type="range" id="capex-slider-fcf" min="0" max="200" value="40" step="10">
         </div>
         <div class="flex flex-col">
-            <label for="nwc-slider-fcf" class="text-sm mb-1">Change in NWC: <span id="nwc-value-fcf" class="font-semibold">10</span></label>
+            <label for="nwc-slider-fcf" class="text-sm mb-1" title="Change in current assets minus current liabilities">Change in NWC: <span id="nwc-value-fcf" class="font-semibold">10</span></label>
             <input type="range" id="nwc-slider-fcf" min="-50" max="50" value="10" step="5">
         </div>
     </div>
@@ -374,24 +390,24 @@
 
     <div id="controls-panel-dupont" class="controls-panel rounded-lg shadow-lg hidden">
         <div class="flex flex-col">
-            <label for="ni-slider-dupont" class="text-sm mb-1">Net Income: <span id="ni-value-dupont" class="font-semibold">100</span></label>
+            <label for="ni-slider-dupont" class="text-sm mb-1" title="The company's profit after all expenses and taxes">Net Income: <span id="ni-value-dupont" class="font-semibold">100</span></label>
             <input type="range" id="ni-slider-dupont" min="0" max="500" value="100" step="10">
         </div>
         <div class="flex flex-col">
-            <label for="sales-slider-dupont" class="text-sm mb-1">Sales: <span id="sales-value-dupont" class="font-semibold">1000</span></label>
+            <label for="sales-slider-dupont" class="text-sm mb-1" title="The total revenue generated from sales of goods or services">Sales: <span id="sales-value-dupont" class="font-semibold">1000</span></label>
             <input type="range" id="sales-slider-dupont" min="100" max="5000" value="1000" step="100">
         </div>
         <div class="flex flex-col">
-            <label for="ta-slider-dupont" class="text-sm mb-1">Total Assets: <span id="ta-value-dupont" class="font-semibold">500</span></label>
+            <label for="ta-slider-dupont" class="text-sm mb-1" title="The sum of all assets owned by the company">Total Assets: <span id="ta-value-dupont" class="font-semibold">500</span></label>
             <input type="range" id="ta-slider-dupont" min="50" max="2000" value="500" step="50">
         </div>
         <div class="flex flex-col">
-            <label for="se-slider-dupont" class="text-sm mb-1">Shareholder's Equity: <span id="se-value-dupont" class="font-semibold">250</span></label>
+            <label for="se-slider-dupont" class="text-sm mb-1" title="The portion of the company's assets financed by its owners">Shareholder's Equity: <span id="se-value-dupont" class="font-semibold">250</span></label>
             <input type="range" id="se-slider-dupont" min="50" max="1000" value="250" step="50">
         </div>
     </div>
 
-
+    <div id="tooltip" class="hidden"></div>
     <canvas id="threejs-canvas"></canvas>
 
     <!-- Three.js CDN -->
@@ -401,6 +417,12 @@
         // --- Global Three.js Setup ---
         let scene, camera, renderer;
         let activeTab = 'npv'; // Current active tab
+
+        // Raycaster for interactivity
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+        let intersectedObject = null;
+        const tooltipDiv = document.getElementById('tooltip');
 
         // NPV Visualization specific objects
         let npvCashFlowGroup;
@@ -746,6 +768,7 @@
             );
             waccEquitySegment.visible = false;
             waccGroup.add(waccEquitySegment);
+            waccEquitySegment.userData = { type: 'wacc_equity', value: 0 }; // Add userData for tooltip
 
             waccDebtSegment = new THREE.Mesh(
                 new THREE.CylinderGeometry(WACC_BAR_WIDTH / 2, WACC_BAR_WIDTH / 2, 1, 32),
@@ -753,6 +776,7 @@
             );
             waccDebtSegment.visible = false;
             waccGroup.add(waccDebtSegment);
+            waccDebtSegment.userData = { type: 'wacc_debt', value: 0 }; // Add userData for tooltip
 
             // WACC HTML elements
             waccValueDisplay = document.getElementById('wacc-value');
@@ -764,10 +788,11 @@
             // SML Line
             capmSMLine = new THREE.Line(
                 new THREE.BufferGeometry(),
-                new THREE.LineBasicMaterial({ color: 0x800080, linewidth: 3 }) // Purple SML
+                new THREE.LineBasicMaterial({ color: 0x00FFFF, linewidth: 3 }) // Cyan for better contrast
             );
             capmSMLine.visible = false;
             capmGroup.add(capmSMLine);
+            capmSMLine.userData = { type: 'capm_sml' }; // Add userData for tooltip
 
             // Asset Point
             capmAssetPoint = new THREE.Mesh(
@@ -776,6 +801,7 @@
             );
             capmAssetPoint.visible = false;
             capmGroup.add(capmAssetPoint);
+            capmAssetPoint.userData = { type: 'capm_asset', beta: 0, expectedReturn: 0 }; // Add userData for tooltip
 
             // CAPM Axes
             capmXAxis = new THREE.Line(
@@ -808,8 +834,11 @@
             scene.add(epsGroup);
 
             epsNetIncomeBar = new THREE.Mesh(new THREE.CylinderGeometry(BAR_WIDTH / 2, BAR_WIDTH / 2, 1, 32), new THREE.MeshLambertMaterial({ color: 0x00FF00 }));
+            epsNetIncomeBar.userData = { type: 'eps_net_income', value: 0 };
             epsPrefDivBar = new THREE.Mesh(new THREE.CylinderGeometry(BAR_WIDTH / 2, BAR_WIDTH / 2, 1, 32), new THREE.MeshLambertMaterial({ color: 0xFF0000 }));
+            epsPrefDivBar.userData = { type: 'eps_pref_div', value: 0 };
             epsEPSBar = new THREE.Mesh(new THREE.CylinderGeometry(BAR_WIDTH / 2, BAR_WIDTH / 2, 1, 32), new THREE.MeshLambertMaterial({ color: 0x63b3ed }));
+            epsEPSBar.userData = { type: 'eps_total', value: 0 };
             epsGroup.add(epsNetIncomeBar, epsPrefDivBar, epsEPSBar);
             epsNetIncomeBar.visible = epsPrefDivBar.visible = epsEPSBar.visible = false;
             epsValueDisplay = document.getElementById('eps-value');
@@ -819,7 +848,9 @@
             scene.add(deGroup);
 
             deDebtBar = new THREE.Mesh(new THREE.CylinderGeometry(BAR_WIDTH / 2, BAR_WIDTH / 2, 1, 32), new THREE.MeshLambertMaterial({ color: 0xFFD700 }));
+            deDebtBar.userData = { type: 'de_debt', value: 0 };
             deEquityBar = new THREE.Mesh(new THREE.CylinderGeometry(BAR_WIDTH / 2, BAR_WIDTH / 2, 1, 32), new THREE.MeshLambertMaterial({ color: 0x4CAF50 }));
+            deEquityBar.userData = { type: 'de_equity', value: 0 };
             deGroup.add(deDebtBar, deEquityBar);
             deDebtBar.visible = deEquityBar.visible = false;
             deValueDisplay = document.getElementById('d_e-value');
@@ -829,10 +860,15 @@
             scene.add(fcfGroup);
 
             fcfEBITBar = new THREE.Mesh(new THREE.CylinderGeometry(BAR_WIDTH / 2, BAR_WIDTH / 2, 1, 32), new THREE.MeshLambertMaterial({ color: 0x00FF00 }));
+            fcfEBITBar.userData = { type: 'fcf_ebit', value: 0 };
             fcfDepreciationBar = new THREE.Mesh(new THREE.CylinderGeometry(BAR_WIDTH / 2, BAR_WIDTH / 2, 1, 32), new THREE.MeshLambertMaterial({ color: 0x90EE90 })); // Light green
+            fcfDepreciationBar.userData = { type: 'fcf_depreciation', value: 0 };
             fcfCapexBar = new THREE.Mesh(new THREE.CylinderGeometry(BAR_WIDTH / 2, BAR_WIDTH / 2, 1, 32), new THREE.MeshLambertMaterial({ color: 0xFF0000 }));
+            fcfCapexBar.userData = { type: 'fcf_capex', value: 0 };
             fcfNWCBar = new THREE.Mesh(new THREE.CylinderGeometry(BAR_WIDTH / 2, BAR_WIDTH / 2, 1, 32), new THREE.MeshLambertMaterial({ color: 0xFFA07A })); // Light salmon
+            fcfNWCBar.userData = { type: 'fcf_nwc', value: 0 };
             fcfTotalFCFBar = new THREE.Mesh(new THREE.CylinderGeometry(BAR_WIDTH / 2, BAR_WIDTH / 2, 1, 32), new THREE.MeshLambertMaterial({ color: 0x800080 })); // Purple for FCF
+            fcfTotalFCFBar.userData = { type: 'fcf_total', value: 0 };
             fcfGroup.add(fcfEBITBar, fcfDepreciationBar, fcfCapexBar, fcfNWCBar, fcfTotalFCFBar);
             fcfEBITBar.visible = fcfDepreciationBar.visible = fcfCapexBar.visible = fcfNWCBar.visible = fcfTotalFCFBar.visible = false;
             fcfValueDisplay = document.getElementById('fcf-value');
@@ -842,9 +878,13 @@
             scene.add(dupontGroup);
 
             dupontPMBar = new THREE.Mesh(new THREE.CylinderGeometry(BAR_WIDTH / 2, BAR_WIDTH / 2, 1, 32), new THREE.MeshLambertMaterial({ color: 0x00FF00 })); // Green
+            dupontPMBar.userData = { type: 'dupont_profit_margin', value: 0 };
             dupontATBar = new THREE.Mesh(new THREE.CylinderGeometry(BAR_WIDTH / 2, BAR_WIDTH / 2, 1, 32), new THREE.MeshLambertMaterial({ color: 0x63b3ed })); // Blue
+            dupontATBar.userData = { type: 'dupont_asset_turnover', value: 0 };
             dupontEMBar = new THREE.Mesh(new THREE.CylinderGeometry(BAR_WIDTH / 2, BAR_WIDTH / 2, 1, 32), new THREE.MeshLambertMaterial({ color: 0xFFD700 })); // Gold
+            dupontEMBar.userData = { type: 'dupont_equity_multiplier', value: 0 };
             dupontROEBar = new THREE.Mesh(new THREE.CylinderGeometry(BAR_WIDTH / 2, BAR_WIDTH / 2, 1, 32), new THREE.MeshLambertMaterial({ color: 0xFF0000 })); // Red for ROE
+            dupontROEBar.userData = { type: 'dupont_roe', value: 0 };
             dupontGroup.add(dupontPMBar, dupontATBar, dupontEMBar, dupontROEBar);
             dupontPMBar.visible = dupontATBar.visible = dupontEMBar.visible = dupontROEBar.visible = false;
             dupontROEValueDisplay = document.getElementById('roe-value');
@@ -865,7 +905,187 @@
 
             // Handle window resizing
             window.addEventListener('resize', onWindowResize, false);
+            // Mouse move for tooltips
+            window.addEventListener('mousemove', onMouseMove, false);
         }
+
+        // --- Mouse Move for Raycasting and Tooltips ---
+        function onMouseMove(event) {
+            // Calculate mouse position in normalized device coordinates (-1 to +1)
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+            // Update the raycaster with the camera and mouse position
+            raycaster.setFromCamera(mouse, camera);
+
+            let intersects = [];
+            let currentObjects = [];
+
+            // Determine which objects to check based on the active tab
+            if (activeTab === 'npv') {
+                npvCashFlowGroup.children.forEach(child => {
+                    // Only consider the cylinder meshes, not the text sprites
+                    if (child.isMesh && child.userData.type) {
+                        currentObjects.push(child);
+                    }
+                });
+            } else if (activeTab === 'irr') {
+                // For IRR, we mostly care about the marker and potentially the curve.
+                // Intersecting a line is tricky, so we'll focus on the IRR marker.
+                if (irrIRRMarker.visible) {
+                    currentObjects.push(irrIRRMarker);
+                }
+            } else if (activeTab === 'wacc') {
+                if (waccEquitySegment.visible) currentObjects.push(waccEquitySegment);
+                if (waccDebtSegment.visible) currentObjects.push(waccDebtSegment);
+            } else if (activeTab === 'capm') {
+                if (capmAssetPoint.visible) currentObjects.push(capmAssetPoint);
+                // Intersecting a line (capmSMLine) is complex for precise tooltips,
+                // so we'll focus on the asset point for now.
+            } else if (activeTab === 'eps') {
+                if (epsNetIncomeBar.visible) currentObjects.push(epsNetIncomeBar);
+                if (epsPrefDivBar.visible) currentObjects.push(epsPrefDivBar);
+                if (epsEPSBar.visible) currentObjects.push(epsEPSBar);
+            } else if (activeTab === 'd_e') {
+                if (deDebtBar.visible) currentObjects.push(deDebtBar);
+                if (deEquityBar.visible) currentObjects.push(deEquityBar);
+            } else if (activeTab === 'fcf') {
+                if (fcfEBITBar.visible) currentObjects.push(fcfEBITBar);
+                // NOPAT bar is dynamically created, so we need to find it if it exists
+                const nopatBar = fcfGroup.children.find(child => child.userData.type === 'fcf_nopat_bar');
+                if (nopatBar && nopatBar.visible) currentObjects.push(nopatBar);
+                if (fcfDepreciationBar.visible) currentObjects.push(fcfDepreciationBar);
+                if (fcfCapexBar.visible) currentObjects.push(fcfCapexBar);
+                if (fcfNWCBar.visible) currentObjects.push(fcfNWCBar);
+                if (fcfTotalFCFBar.visible) currentObjects.push(fcfTotalFCFBar);
+            } else if (activeTab === 'dupont') {
+                if (dupontPMBar.visible) currentObjects.push(dupontPMBar);
+                if (dupontATBar.visible) currentObjects.push(dupontATBar);
+                if (dupontEMBar.visible) currentObjects.push(dupontEMBar);
+                if (dupontROEBar.visible) currentObjects.push(dupontROEBar);
+            }
+
+            intersects = raycaster.intersectObjects(currentObjects);
+
+            if (intersects.length > 0) {
+                const newIntersectedObject = intersects[0].object;
+
+                if (intersectedObject !== newIntersectedObject) {
+                    intersectedObject = newIntersectedObject;
+                    displayTooltip(intersectedObject, event.clientX, event.clientY);
+                }
+            } else {
+                hideTooltip();
+                intersectedObject = null;
+            }
+        }
+
+        function displayTooltip(object, clientX, clientY) {
+            let tooltipContent = '';
+            const userData = object.userData;
+
+            if (!userData || !userData.type) {
+                hideTooltip();
+                return;
+            }
+
+            switch (userData.type) {
+                case 'npv_c0':
+                    tooltipContent = `Initial Investment (C0): -$${C0_VAL.toFixed(0)}`;
+                    break;
+                case 'npv_ct':
+                    tooltipContent = `Period ${userData.period}: Cash Flow $${CT_VAL.toFixed(0)}, PV $${userData.value.toFixed(2)}`;
+                    break;
+                case 'irr_marker':
+                    tooltipContent = `Internal Rate of Return (IRR): ${(calculateIRR(C0_VAL, CT_VAL, N_VAL) * 100).toFixed(2)}%`;
+                    break;
+                case 'wacc_equity':
+                    const equityWeight = E_VAL / (E_VAL + D_VAL);
+                    const weightedKe = equityWeight * KE_VAL;
+                    tooltipContent = `Weighted Cost of Equity: ${(weightedKe * 100).toFixed(2)}%`;
+                    break;
+                case 'wacc_debt':
+                    const debtWeight = D_VAL / (E_VAL + D_VAL);
+                    const weightedKdAfterTax = debtWeight * KD_VAL * (1 - TC_VAL);
+                    tooltipContent = `Weighted Cost of Debt (After Tax): ${(weightedKdAfterTax * 100).toFixed(2)}%`;
+                    break;
+                case 'capm_asset':
+                    const currentERI = calculateCAPM(RF_VAL, BETA_VAL, MRP_VAL);
+                    tooltipContent = `Asset Expected Return (β=${BETA_VAL.toFixed(2)}): ${(currentERI * 100).toFixed(2)}%`;
+                    break;
+                case 'eps_net_income':
+                    tooltipContent = `Net Income: $${NET_INCOME_EPS.toFixed(0)}`;
+                    break;
+                case 'eps_pref_div':
+                    tooltipContent = `Preferred Dividends: $${PREF_DIV_EPS.toFixed(0)}`;
+                    break;
+                case 'eps_total':
+                    tooltipContent = `Earnings Per Share (EPS): $${calculateEPS(NET_INCOME_EPS, PREF_DIV_EPS, SHARES_EPS).toFixed(2)}`;
+                    break;
+                case 'de_debt':
+                    tooltipContent = `Total Debt: $${TOTAL_DEBT_DE.toFixed(0)}`;
+                    break;
+                case 'de_equity':
+                    tooltipContent = `Shareholder's Equity: $${EQUITY_DE.toFixed(0)}`;
+                    break;
+                case 'fcf_ebit':
+                    tooltipContent = `EBIT: $${EBIT_FCF.toFixed(0)}`;
+                    break;
+                case 'fcf_nopat_bar': // NOPAT is a derived bar
+                    const nopat = EBIT_FCF * (1 - TC_VAL);
+                    tooltipContent = `NOPAT: $${nopat.toFixed(0)}`;
+                    break;
+                case 'fcf_depreciation':
+                    tooltipContent = `Depreciation: $${DEPRECIATION_FCF.toFixed(0)}`;
+                    break;
+                case 'fcf_capex':
+                    tooltipContent = `Capital Expenditures: $${CAPEX_FCF.toFixed(0)}`;
+                    break;
+                case 'fcf_nwc':
+                    tooltipContent = `Change in NWC: $${NWC_FCF.toFixed(0)}`;
+                    break;
+                case 'fcf_total':
+                    tooltipContent = `Free Cash Flow: $${calculateFCF(EBIT_FCF, TC_VAL, DEPRECIATION_FCF, CAPEX_FCF, NWC_FCF).toFixed(2)}`;
+                    break;
+                case 'dupont_profit_margin':
+                    const pm = NET_INCOME_DUPONT / SALES_DUPONT;
+                    tooltipContent = `Profit Margin: ${(pm * 100).toFixed(2)}%`;
+                    break;
+                case 'dupont_asset_turnover':
+                    const at = SALES_DUPONT / TOTAL_ASSETS_DUPONT;
+                    tooltipContent = `Asset Turnover: ${at.toFixed(2)}x`;
+                    break;
+                case 'dupont_equity_multiplier':
+                    const em = TOTAL_ASSETS_DUPONT / SHAREHOLDERS_EQUITY_DUPONT;
+                    tooltipContent = `Equity Multiplier: ${em.toFixed(2)}x`;
+                    break;
+                case 'dupont_roe':
+                    const roe = calculateDupontROE(NET_INCOME_DUPONT, SALES_DUPONT, TOTAL_ASSETS_DUPONT, SHAREHOLDERS_EQUITY_DUPONT);
+                    tooltipContent = `Return on Equity (ROE): ${(roe * 100).toFixed(2)}%`;
+                    break;
+            }
+
+            if (tooltipContent) {
+                tooltipDiv.innerHTML = tooltipContent;
+                tooltipDiv.style.left = (clientX + 10) + 'px'; // Offset from cursor
+                tooltipDiv.style.top = (clientY + 10) + 'px';
+                tooltipDiv.classList.add('active');
+                tooltipDiv.classList.remove('hidden');
+            } else {
+                hideTooltip();
+            }
+        }
+
+        function hideTooltip() {
+            tooltipDiv.classList.remove('active');
+            // Give it a moment to transition out before hiding completely
+            setTimeout(() => {
+                if (!tooltipDiv.classList.contains('active')) { // Only hide if not re-activated
+                    tooltipDiv.classList.add('hidden');
+                }
+            }, 200);
+        }
+
 
         // --- Control Setup Functions ---
         function setupNPVControls() {
@@ -1190,6 +1410,7 @@
                 new THREE.MeshLambertMaterial({ color: 0xFF0000 }) // Red for outflow
             );
             c0_cylinder.position.set(0, -c0_height / 2, 0); // Position below timeline
+            c0_cylinder.userData = { type: 'npv_c0', value: C0_VAL }; // Add userData for tooltip
             npvCashFlowGroup.add(c0_cylinder);
 
             const c0_label = createTextSprite(`C0: ${C0_VAL.toFixed(0)}`, 0, -c0_height - 0.5, 0, '#FF0000', 24);
@@ -1207,6 +1428,7 @@
                     new THREE.MeshLambertMaterial({ color: 0x00FF00 }) // Green for inflow
                 );
                 cf_cylinder.position.set(t * TIME_STEP_X, cf_height / 2, 0); // Position above timeline
+                cf_cylinder.userData = { type: 'npv_ct', value: presentValue, period: t }; // Add userData for tooltip
                 npvCashFlowGroup.add(cf_cylinder);
 
                 const cf_label = createTextSprite(`PV: ${presentValue.toFixed(2)}`, t * TIME_STEP_X, cf_height + 0.5, 0, '#00FF00', 24);
@@ -1279,10 +1501,12 @@
                 const irr_x_pos = THREE.MathUtils.mapLinear(calculatedIRR, IRR_PLOT_R_MIN, IRR_PLOT_R_MAX, -IRR_PLOT_WIDTH / 2, IRR_PLOT_WIDTH / 2);
                 irrIRRMarker.position.x = irr_x_pos;
                 irrIRRMarker.visible = true;
+                irrIRRMarker.userData = { type: 'irr_marker', value: calculatedIRR }; // Add userData for tooltip
             } else {
                 irrIRRValueDisplay.textContent = "N/A";
                 irrIRRValueDisplay.className = "font-bold text-lg text-gray-400";
                 irrIRRMarker.visible = false;
+                irrIRRMarker.userData = { type: 'irr_marker', value: NaN }; // Update userData even if hidden
             }
 
             // Update IRR axis markers
@@ -1323,8 +1547,8 @@
             const totalWACC = calculateWACC(KE_VAL, KD_VAL, E_VAL, D_VAL, TC_VAL);
 
             const V = E_VAL + D_VAL;
-            const equityWeight = E_VAL / V;
-            const debtWeight = D_VAL / V;
+            const equityWeight = V === 0 ? 0 : E_VAL / V;
+            const debtWeight = V === 0 ? 0 : D_VAL / V;
 
             const weightedKe = equityWeight * KE_VAL;
             const weightedKdAfterTax = debtWeight * KD_VAL * (1 - TC_VAL);
@@ -1340,12 +1564,14 @@
             waccEquitySegment.geometry = new THREE.CylinderGeometry(WACC_BAR_WIDTH / 2, WACC_BAR_WIDTH / 2, equityHeight, 32);
             waccEquitySegment.position.set(0, equityHeight / 2, 0); // Position above 0
             waccEquitySegment.visible = true;
+            waccEquitySegment.userData.value = weightedKe; // Update userData
 
             // Update Debt Segment
             waccDebtSegment.geometry.dispose();
             waccDebtSegment.geometry = new THREE.CylinderGeometry(WACC_BAR_WIDTH / 2, WACC_BAR_WIDTH / 2, debtHeight, 32);
             waccDebtSegment.position.set(0, equityHeight + debtHeight / 2, 0); // Stack on top of equity
             waccDebtSegment.visible = true;
+            waccDebtSegment.userData.value = weightedKdAfterTax; // Update userData
 
             // Add labels
             const equityLabel = createTextSprite(`Equity: ${(weightedKe * 100).toFixed(2)}%`, 0, equityHeight / 2, CYLINDER_RADIUS + 0.2, '#00FF00', 24);
@@ -1395,6 +1621,8 @@
             const asset_y_pos = THREE.MathUtils.mapLinear(assetExpectedReturn, CAPM_PLOT_ER_MIN, CAPM_PLOT_ER_MAX, -CAPM_PLOT_HEIGHT / 2, CAPM_PLOT_HEIGHT / 2);
             capmAssetPoint.position.set(asset_x_pos, asset_y_pos, 0.01); // Slight Z-offset
             capmAssetPoint.visible = true;
+            capmAssetPoint.userData.beta = BETA_VAL; // Update userData
+            capmAssetPoint.userData.expectedReturn = assetExpectedReturn; // Update userData
 
             // Update HTML display
             capmERIValueDisplay.textContent = (assetExpectedReturn * 100).toFixed(2) + '%';
@@ -1442,16 +1670,19 @@
             epsNetIncomeBar.geometry = new THREE.CylinderGeometry(BAR_WIDTH / 2, BAR_WIDTH / 2, incomeHeight, 32);
             epsNetIncomeBar.position.set(-BAR_WIDTH * 1.5, incomeHeight / 2, 0);
             epsNetIncomeBar.visible = true;
+            epsNetIncomeBar.userData.value = NET_INCOME_EPS;
 
             epsPrefDivBar.geometry.dispose();
             epsPrefDivBar.geometry = new THREE.CylinderGeometry(BAR_WIDTH / 2, BAR_WIDTH / 2, prefDivHeight, 32);
             epsPrefDivBar.position.set(0, prefDivHeight / 2, 0);
             epsPrefDivBar.visible = true;
+            epsPrefDivBar.userData.value = PREF_DIV_EPS;
 
             epsEPSBar.geometry.dispose();
             epsEPSBar.geometry = new THREE.CylinderGeometry(BAR_WIDTH / 2, BAR_WIDTH / 2, epsHeight, 32);
             epsEPSBar.position.set(BAR_WIDTH * 1.5, epsHeight / 2, 0);
             epsEPSBar.visible = true;
+            epsEPSBar.userData.value = calculatedEPS;
 
             // Add labels
             epsLabels.push(createTextSprite(`Net Income: ${NET_INCOME_EPS.toFixed(0)}`, -BAR_WIDTH * 1.5, incomeHeight + 0.5, 0, '#00FF00', 24));
@@ -1490,11 +1721,13 @@
             deDebtBar.geometry = new THREE.CylinderGeometry(BAR_WIDTH / 2, BAR_WIDTH / 2, debtHeight, 32);
             deDebtBar.position.set(-BAR_WIDTH, debtHeight / 2, 0);
             deDebtBar.visible = true;
+            deDebtBar.userData.value = TOTAL_DEBT_DE;
 
             deEquityBar.geometry.dispose();
             deEquityBar.geometry = new THREE.CylinderGeometry(BAR_WIDTH / 2, BAR_WIDTH / 2, equityHeight, 32);
             deEquityBar.position.set(BAR_WIDTH, equityHeight / 2, 0);
             deEquityBar.visible = true;
+            deEquityBar.userData.value = EQUITY_DE;
 
             // Add labels
             deLabels.push(createTextSprite(`Total Debt: ${TOTAL_DEBT_DE.toFixed(0)}`, -BAR_WIDTH, debtHeight + 0.5, 0, '#FFD700', 24));
@@ -1521,6 +1754,14 @@
             });
             fcfLabels = [];
 
+            // Remove dynamically created NOPAT bar if it exists
+            const existingNopatBar = fcfGroup.children.find(child => child.userData.type === 'fcf_nopat_bar');
+            if (existingNopatBar) {
+                existingNopatBar.geometry.dispose();
+                existingNopatBar.material.dispose();
+                fcfGroup.remove(existingNopatBar);
+            }
+
             const calculatedFCF = calculateFCF(EBIT_FCF, TC_VAL, DEPRECIATION_FCF, CAPEX_FCF, NWC_FCF);
 
             // Scale heights for visualization (adjust max value for better scaling)
@@ -1541,37 +1782,44 @@
             fcfEBITBar.geometry = new THREE.CylinderGeometry(BAR_WIDTH / 2, BAR_WIDTH / 2, ebitHeight, 32);
             fcfEBITBar.position.set(-BAR_WIDTH * 2, ebitHeight / 2, 0);
             fcfEBITBar.visible = true;
+            fcfEBITBar.userData.value = EBIT_FCF;
 
             // NOPAT (derived, not a direct input bar, but useful for flow)
             const nopatBar = new THREE.Mesh(new THREE.CylinderGeometry(BAR_WIDTH / 2, BAR_WIDTH / 2, nopatHeight, 32), new THREE.MeshLambertMaterial({ color: 0x00BFFF })); // Deep Sky Blue
             nopatBar.position.set(-BAR_WIDTH, nopatHeight / 2, 0);
+            nopatBar.userData = { type: 'fcf_nopat_bar', value: nopat }; // Add userData
             fcfGroup.add(nopatBar);
-            fcfLabels.push(createTextSprite(`NOPAT: ${nopat.toFixed(0)}`, -BAR_WIDTH, nopatHeight + 0.5, 0, '#00BFFF', 24));
+
 
             fcfDepreciationBar.geometry.dispose();
             fcfDepreciationBar.geometry = new THREE.CylinderGeometry(BAR_WIDTH / 2, BAR_WIDTH / 2, depreciationHeight, 32);
             fcfDepreciationBar.position.set(0, depreciationHeight / 2, 0);
             fcfDepreciationBar.visible = true;
+            fcfDepreciationBar.userData.value = DEPRECIATION_FCF;
 
             fcfCapexBar.geometry.dispose();
             fcfCapexBar.geometry = new THREE.CylinderGeometry(BAR_WIDTH / 2, BAR_WIDTH / 2, capexHeight, 32);
             fcfCapexBar.position.set(BAR_WIDTH, -capexHeight / 2, 0); // Negative contribution
             fcfCapexBar.visible = true;
+            fcfCapexBar.userData.value = CAPEX_FCF;
 
             fcfNWCBar.geometry.dispose();
             fcfNWCBar.geometry = new THREE.CylinderGeometry(BAR_WIDTH / 2, BAR_WIDTH / 2, nwcHeight, 32);
             fcfNWCBar.position.set(BAR_WIDTH * 2, (NWC_FCF >= 0 ? -nwcHeight / 2 : nwcHeight / 2), 0); // Negative if NWC increases
             fcfNWCBar.visible = true;
+            fcfNWCBar.userData.value = NWC_FCF;
 
 
             fcfTotalFCFBar.geometry.dispose();
             fcfTotalFCFBar.geometry = new THREE.CylinderGeometry(BAR_WIDTH / 2, BAR_WIDTH / 2, fcfHeight, 32);
             fcfTotalFCFBar.position.set(BAR_WIDTH * 3, (calculatedFCF >= 0 ? fcfHeight / 2 : -fcfHeight / 2), 0);
             fcfTotalFCFBar.visible = true;
+            fcfTotalFCFBar.userData.value = calculatedFCF;
 
 
             // Add labels
             fcfLabels.push(createTextSprite(`EBIT: ${EBIT_FCF.toFixed(0)}`, -BAR_WIDTH * 2, ebitHeight + 0.5, 0, '#00FF00', 24));
+            fcfLabels.push(createTextSprite(`NOPAT: ${nopat.toFixed(0)}`, -BAR_WIDTH, nopatHeight + 0.5, 0, '#00BFFF', 24));
             fcfLabels.push(createTextSprite(`Depreciation: ${DEPRECIATION_FCF.toFixed(0)}`, 0, depreciationHeight + 0.5, 0, '#90EE90', 24));
             fcfLabels.push(createTextSprite(`CapEx: ${CAPEX_FCF.toFixed(0)}`, BAR_WIDTH, -capexHeight - 0.5, 0, '#FF0000', 24));
             fcfLabels.push(createTextSprite(`Chg NWC: ${NWC_FCF.toFixed(0)}`, BAR_WIDTH * 2, (NWC_FCF >= 0 ? -nwcHeight - 0.5 : nwcHeight + 0.5), 0, '#FCA07A', 24));
@@ -1616,21 +1864,25 @@
             dupontPMBar.geometry = new THREE.CylinderGeometry(BAR_WIDTH / 2, BAR_WIDTH / 2, pmHeight, 32);
             dupontPMBar.position.set(-BAR_WIDTH * 1.5, pmHeight / 2, 0);
             dupontPMBar.visible = true;
+            dupontPMBar.userData.value = profitMargin;
 
             dupontATBar.geometry.dispose();
             dupontATBar.geometry = new THREE.CylinderGeometry(BAR_WIDTH / 2, BAR_WIDTH / 2, atHeight, 32);
             dupontATBar.position.set(0, atHeight / 2, 0);
             dupontATBar.visible = true;
+            dupontATBar.userData.value = assetTurnover;
 
             dupontEMBar.geometry.dispose();
             dupontEMBar.geometry = new THREE.CylinderGeometry(BAR_WIDTH / 2, BAR_WIDTH / 2, emHeight, 32);
             dupontEMBar.position.set(BAR_WIDTH * 1.5, emHeight / 2, 0);
             dupontEMBar.visible = true;
+            dupontEMBar.userData.value = equityMultiplier;
 
             dupontROEBar.geometry.dispose();
             dupontROEBar.geometry = new THREE.CylinderGeometry(BAR_WIDTH / 2, BAR_WIDTH / 2, roeHeight, 32);
             dupontROEBar.position.set(BAR_WIDTH * 3, roeHeight / 2, 0);
             dupontROEBar.visible = true;
+            dupontROEBar.userData.value = calculatedROE;
 
             // Add labels
             dupontLabels.push(createTextSprite(`PM: ${(profitMargin * 100).toFixed(2)}%`, -BAR_WIDTH * 1.5, pmHeight + 0.5, 0, '#00FF00', 24));
@@ -1766,4 +2018,3 @@
     </script>
 </body>
 </html>
-
