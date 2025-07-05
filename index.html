@@ -169,7 +169,7 @@
             <input type="range" id="c0-slider-npv" min="0" max="200" value="50" step="1">
         </div>
         <div class="flex flex-col">
-            <label for="ct-slider-npv" class="text-sm mb-1" title="Constant cash inflow for each period after initial investment">Annual Cash Flow (Ct): <span id="ct-value-npv" class="font-semibold">20</span></label>
+            <label for="ct-slider-npv" class="text-sm mb-1" title="Constant cash inflow for each period after initial investment">Annual Cash Flow (C<sub>t</sub>): <span id="ct-value-npv" class="font-semibold">20</span></label>
             <input type="range" id="ct-slider-npv" min="0" max="100" value="20" step="1">
         </div>
         <div class="flex flex-col">
@@ -199,11 +199,11 @@
 
     <div id="controls-panel-irr" class="controls-panel rounded-lg shadow-lg hidden">
         <div class="flex flex-col">
-            <label for="c0-slider-irr" class="text-sm mb-1" title="Initial cash outflow at time t=0">Initial Investment (C0): <span id="c0-value-irr" class="font-semibold">50</span></label>
+            <label for="c0-slider-irr" class="text-sm mb-1" title="Initial cash outflow at time t=0">Initial Investment (C<sub>0</sub>): <span id="c0-value-irr" class="font-semibold">50</span></label>
             <input type="range" id="c0-slider-irr" min="0" max="200" value="50" step="1">
         </div>
         <div class="flex flex-col">
-            <label for="ct-slider-irr" class="text-sm mb-1" title="Constant cash inflow for each period after initial investment">Annual Cash Flow (Ct): <span id="ct-value-irr" class="font-semibold">20</span></label>
+            <label for="ct-slider-irr" class="text-sm mb-1" title="Constant cash inflow for each period after initial investment">Annual Cash Flow (C<sub>t</sub>): <span id="ct-value-irr" class="font-semibold">20</span></label>
             <input type="range" id="ct-slider-irr" min="0" max="100" value="20" step="1">
         </div>
         <div class="flex flex-col">
@@ -233,7 +233,7 @@
 
     <div id="controls-panel-wacc" class="controls-panel rounded-lg shadow-lg hidden">
         <div class="flex flex-col">
-            <label for="ke-slider-wacc" class="text-sm mb-1" title="The rate of return required by equity investors">Cost of Equity (Ke): <span id="ke-value-wacc" class="font-semibold">12.0%</span></label>
+            <label for="ke-slider-wacc" class="text-sm mb-1" title="The rate of return required by equity investors">Cost of Equity (K<sub>e</sub>): <span id="ke-value-wacc" class="font-semibold">12.0%</span></label>
             <input type="range" id="ke-slider-wacc" min="0.01" max="0.30" value="0.12" step="0.01">
         </div>
         <div class="flex flex-col">
@@ -249,7 +249,7 @@
             <input type="range" id="d-slider-wacc" min="10" max="500" value="50" step="10">
         </div>
         <div class="flex flex-col">
-            <label for="tc-slider-wacc" class="text-sm mb-1" title="The corporate income tax rate applicable to the company">Corporate Tax Rate (Tc): <span id="tc-value-wacc" class="font-semibold">25.0%</span></label>
+            <label for="tc-slider-wacc" class="text-sm mb-1" title="The corporate income tax rate applicable to the company">Corporate Tax Rate (T<sub>c</sub>): <span id="tc-value-wacc" class="font-semibold">25.0%</span></label>
             <input type="range" id="tc-slider-wacc" min="0.0" max="0.50" value="0.25" step="0.01">
         </div>
     </div>
@@ -273,7 +273,7 @@
 
     <div id="controls-panel-capm" class="controls-panel rounded-lg shadow-lg hidden">
         <div class="flex flex-col">
-            <label for="rf-slider-capm" class="text-sm mb-1" title="The theoretical return of an investment with zero risk">Risk-Free Rate (Rf): <span id="rf-value-capm" class="font-semibold">4.0%</span></label>
+            <label for="rf-slider-capm" class="text-sm mb-1" title="The theoretical return of an investment with zero risk">Risk-Free Rate (R<sub>f</sub>): <span id="rf-value-capm" class="font-semibold">4.0%</span></label>
             <input type="range" id="rf-slider-capm" min="0.01" max="0.10" value="0.04" step="0.005">
         </div>
         <div class="flex flex-col">
@@ -340,7 +340,7 @@
         <p class="text-sm">
             $$
             \begin{aligned}
-            \text{FCF} =\ &EBIT \cdot (1 - T_c) \\
+            \text{FCF} =\ &EBIT\ \cdot (1 - T_c) \\
                           &+ \text{Depreciation} \\
                           &- \text{Capital Expenditures} \\
                           &- \text{Change in Working Capital}
@@ -349,11 +349,16 @@
 
         </p>
         <p class="text-xs mt-1">
-            $$EBIT: Earnings Before Interest & Taxes$$
+            $$EBIT: Earnings\ Before\ Interest\ \& Taxes$$
             $$T_c: Corporate Tax Rate$$
             $$Depreciation: Non-cash expense$$
             $$Capital\ Expenditures: Investment in assets$$
-            $$Change\ in\ Working\ Capital: Change in current assets - current liabilities$$
+            $$
+            \begin{aligned}
+            \text{Change in Working Capital} ={} & \text{Change in Current Assets} \\
+                                                &- \text{Change in Current Liabilities}
+            \end{aligned}
+            $$
         </p>
         <p class="text-sm mt-2">
             Calculated FCF: <span id="fcf-value" class="font-bold text-lg text-purple-400">0.00</span>
@@ -366,7 +371,7 @@
             <input type="range" id="ebit-slider-fcf" min="0" max="500" value="150" step="10">
         </div>
         <div class="flex flex-col">
-            <label for="tc-slider-fcf" class="text-sm mb-1" title="The corporate income tax rate">Corporate Tax Rate (Tc): <span id="tc-value-fcf" class="font-semibold">25.0%</span></label>
+            <label for="tc-slider-fcf" class="text-sm mb-1" title="The corporate income tax rate">Corporate Tax Rate (T<sub>c</sub>): <span id="tc-value-fcf" class="font-semibold">25.0%</span></label>
             <input type="range" id="tc-slider-fcf" min="0.0" max="0.50" value="0.25" step="0.01">
         </div>
         <div class="flex flex-col">
@@ -1002,7 +1007,7 @@
 
             switch (userData.type) {
                 case 'npv_c0':
-                    tooltipContent = `Initial Investment (C0): -$${C0_VAL.toFixed(0)}`;
+                    tooltipContent = `Initial Investment (C<sub>0</sub>): -$${C0_VAL.toFixed(0)}`;
                     break;
                 case 'npv_ct':
                     tooltipContent = `Period ${userData.period}: Cash Flow $${CT_VAL.toFixed(0)}, PV $${userData.value.toFixed(2)}`;
